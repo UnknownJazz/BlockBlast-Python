@@ -12,12 +12,16 @@ class Game:
         self.clock = pygame.time.Clock()
         self.running = running
 
-        boardSize = 9
+        # instanciate the board
+        boardSize = 8
         boardSlotSize = 48
 
         boardX = (self.windowWidth / 2) - (((boardSlotSize+2) * boardSize) / 2)
         boardY = 8
-        self.board = board.Board(boardX, boardY, boardSize, boardSize, boardSlotSize)
+        self.board = board.Board(boardX, boardY, boardSize, boardSize, self.screen, boardSlotSize)
+
+        # create the blocks below the board
+
 
     def run(self):
         while self.running:
@@ -38,11 +42,12 @@ class Game:
         pygame.quit()
 
     def update(self):
-
         self.board.update()
+
+        print(pygame.mouse.get_pos())
 
     def draw(self):
         # fill the screen with a color to wipe away anything from last frame
-        self.screen.fill("purple")
+        self.screen.fill(pygame.Color(66, 92, 161))
         
         self.board.draw(self.screen)

@@ -1,8 +1,8 @@
 import game
 
 if __name__ == '__main__':
-    windowHeight = 720
-    windowWidth = 1280
+    windowHeight = 620
+    windowWidth = 720
 
     gameInstance = game.Game(windowWidth, windowHeight)
 
