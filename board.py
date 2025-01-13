@@ -13,9 +13,11 @@ class Board:
 
         self.playerBlock = block.Block([[1, -1, 1, -1], [1, -1, -1, 1]])
 
+    # Update the board state each tick
     def update(self):
         self.checkBoardCollision()
 
+    # Draw uhh... thingies each tick
     def draw(self, screen, margin = 2):
         colors = {
             -1 : pygame.Color(33, 44, 82),
@@ -23,6 +25,7 @@ class Board:
             1 : "green"
         }
 
+        # Draw each slot of the board
         self.margin = margin
         for i in range(len(self.board)): # Row
             yy = self.y + ((self.slotSize + margin) * i)
@@ -34,11 +37,16 @@ class Board:
                 pygame.draw.rect(screen, (colors[self.board[i][j]]), (xx, yy, self.slotSize, self.slotSize))
         
         self.playerBlock.draw(500, 500, "red", self.screen)
-
-    def checkBoardCollision(self): # checks if the mouse is inside the board
-        yy = self.y + ((self.slotSize + 2) * self.rows)
-        if (pygame.mouse.get_pos()[0] > self.x and pygame.mouse.get_pos()[1] < yy): # Check if the mouse is inside the board
+    
+    # checks if a position is inside the board
+    # Currently it checks the mouse position
+    def checkBoardCollision(self):
+        height = self.y + ((self.slotSize + 2) * self.rows)
+        margin = 2
+        width = self.x + ((self.slotSize + margin) * self.columns)
+        if ((pygame.mouse.get_pos()[0] > self.x and pygame.mouse.get_pos()[0] < width) and (pygame.mouse.get_pos()[1] > self.y and pygame.mouse.get_pos()[1] < height)): # Check if the mouse is inside the board
             self.checkSlotCollision()
+            print("Naa sa board")
     
     def checkSlotCollision(self): # checks if the mouse is hovering a slot
         margin = 2

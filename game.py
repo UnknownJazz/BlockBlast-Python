@@ -44,8 +44,6 @@ class Game:
     def update(self):
         self.board.update()
 
-        print(pygame.mouse.get_pos())
-
     def draw(self):
         # fill the screen with a color to wipe away anything from last frame
         self.screen.fill(pygame.Color(66, 92, 161))
