@@ -15,7 +15,8 @@ class Board:
         self.width = self.x + ((self.slotSize + self.margin) * self.columns)
         self.height = self.y + ((self.slotSize + self.margin) * self.rows)
 
-        self.dragBlock = -1
+        self.dragBlock = None
+        self.dragBlockIndex = None
 
         self.playerBlocks = [self.generateBlocks(),self.generateBlocks(),self.generateBlocks()]
         
@@ -29,18 +30,23 @@ class Board:
 
     # Update the board state each tick
     def update(self):
-        if (self.dragBlock != -1):
+        if (self.dragBlock != None):
             self.checkBoardCollision()
 
         for i in range(len(self.playerBlocks)):
             currentBlock = self.playerBlocks[i]
-
-            # Check mouse position if it is hovering a block
-            if (pygame.mouse.get_pos()[0] > currentBlock.x and pygame.mouse.get_pos()[0] < (currentBlock.x + currentBlock.width) and 
-                pygame.mouse.get_pos()[1] > currentBlock.y and pygame.mouse.get_pos()[1] < (currentBlock.y + currentBlock.height)):
-                if (pygame.mouse.get_pressed()[0] and self.dragBlock == -1): 
-                    currentBlock.state = 1 # 1 means it is being dragged
-                    self.dragBlock = currentBlock
+            
+            if (currentBlock != None):
+                # Check mouse position if it is hovering a block
+                if (pygame.mouse.get_pos()[0] > currentBlock.x and pygame.mouse.get_pos()[0] < (currentBlock.x + currentBlock.width) and 
+                    pygame.mouse.get_pos()[1] > currentBlock.y and pygame.mouse.get_pos()[1] < (currentBlock.y + currentBlock.height)):
+                    if (pygame.mouse.get_pressed()[0] and self.dragBlock == None): 
+                        currentBlock.state = 1 # 1 means it is being dragged
+                        self.dragBlock = currentBlock
+                        self.dragBlockIndex = i
+        
+        # Regenerate if there is no more blocks
+        self.refillPlayerBlocks()
 
     # Draw uhh... thingies each tick
     def draw(self, screen):
@@ -62,7 +68,7 @@ class Board:
         
         # Draw each available blocks at the bottom of the board
         for block in self.playerBlocks:
-            if (block != -1):
+            if (block != None):
                 block.draw("red", self.screen, self)
 
     # checks if a position is inside the board
@@ -131,11 +137,16 @@ class Board:
                     self.board[i][j] = -1
 
     def deployBlock(self):
+        deployed = False
         for i in range(len(self.board)):
             for j in range(len(self.board[i])):
                 if (self.board[i][j] == 0):
                     self.board[i][j] = 1
-        self.checkBlast()
+                    deployed = True
+        
+        if (deployed):
+            self.checkBlast()
+            self.playerBlocks[self.dragBlockIndex] = None
 
     # Blast is when an entire row or column is filled, then boom shaka laka
     def checkBlast(self):
@@ -171,15 +182,33 @@ class Board:
 
     def generateBlocks(self):
         blockConstruct = {
-            0 : [[1, 1, 1, 1, 1 ]],
-            1 : [[1, -1, -1, -1], [1, 1, 1, 1]],
-            2 : [[1, 1, 1, 1], [-1, -1, -1, 1], [-1, -1, -1, 1]],
+            0 : [[1, 1, 1, 1]],
+            1 : [[1, -1, -1], [1, 1, 1]],
+            2 : [[1, 1, 1], [-1, -1, 1], [-1, -1, 1]],
             3 : [[1]],
             4 : [[1, 1]],
             5 : [[1, 1],[-1, 1]]
         }
 
         return block.Block(blockConstruct[random.randint(0, len(blockConstruct)-1)])
+    
+    def refillPlayerBlocks(self):
+        emptyBlocks = True
+        for block in self.playerBlocks:
+            if (block != None):
+                emptyBlocks = False
+        
+        if (emptyBlocks):
+            for i in range(len(self.playerBlocks)):
+                self.playerBlocks[i] = self.generateBlocks()
+
+            for i in range(len(self.playerBlocks)):
+                if (self.playerBlocks[i] != -1):
+                    numberOfBlocks = len(self.playerBlocks)
+                    xx = self.x + ((((self.width - self.x) / numberOfBlocks) * i) + (((self.width - self.x) / numberOfBlocks) / 2)) - (self.playerBlocks[i].width / 2)
+                    yy = self.y + (self.height + 92) - (self.playerBlocks[i].height / 2)
+
+                    self.playerBlocks[i].setPosition(xx, yy)
 
     def setSlotValue(self, row, column, value):
         if (row < len(self.board) and column < len(self.board[row])):

@@ -53,8 +53,10 @@ class Block:
             self.state = 0
             self.dragX = self.x
             self.dragY = self.y
-            board.dragBlock = -1
+
             board.deployBlock()
+            board.dragBlock = None
+            board.dragBlockIndex = None
             board.refreshBoard()
 
 
