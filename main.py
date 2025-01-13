@@ -8,10 +8,14 @@ class Board:
     def draw(self, x, y, screen, margin = 2):
         for i in range(len(self.board)): # Row
             yy = y + ((self.slotSize + margin) * i)
-        for j in range(len(self.board[i])): # Column
-            xx = x + ((self.slotSize + margin) * j)
-            
-            pygame.draw.rect(screen, ("black" if self.board[i][j] == -1 else "green"), (xx, yy, self.slotSize, self.slotSize))
+            for j in range(len(self.board[i])): # Column
+                xx = x + ((self.slotSize + margin) * j)
+                
+                pygame.draw.rect(screen, ("black" if self.board[i][j] == -1 else "green"), (xx, yy, self.slotSize, self.slotSize))
+
+    def print(self):
+        for i in self.board:
+            print(i)
 
 class Game:
     def __init__(self, windowWidth, windowHeight, running = True):
@@ -31,9 +35,10 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
+                    
+            self.update()
 
-            # fill the screen with a color to wipe away anything from last frame
-            self.screen.fill("purple")
+            self.draw()
 
             # flip() the display to put your work on screen
             pygame.display.flip()
@@ -42,9 +47,16 @@ class Game:
 
         pygame.quit()
 
-    def printBoard(board):
-        for i in board:
-            print(i)
+    def update(self):
+        boardSize = 9
+        self.board = Board(boardSize, boardSize)
+
+    def draw(self):
+        # fill the screen with a color to wipe away anything from last frame
+        self.screen.fill("purple")
+        self.board.draw(3, 3, self.screen)
+
+    
 
 
 if __name__ == '__main__':
