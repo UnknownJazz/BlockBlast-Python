@@ -1,19 +1,35 @@
 import pygame
+import time
 
 class Board:
-    def __init__(self, rows, columns, slotSize = 64):
+    def __init__(self, x, y, rows, columns, slotSize = 64):
         self.board = [[-1 for i in range(rows)] for j in range(columns)]
         self.slotSize = slotSize
         self.rows = rows
         self.columns = columns
+        self.x = x
+        self.y = y
 
-    def draw(self, x, y, screen, margin = 2):
+    def draw(self, screen, margin = 2):
         for i in range(len(self.board)): # Row
-            yy = y + ((self.slotSize + margin) * i)
+            yy = self.y + ((self.slotSize + margin) * i)
             for j in range(len(self.board[i])): # Column
-                xx = x + ((self.slotSize + margin) * j)
-                
+                xx = self.x + ((self.slotSize + margin) * j)
+                # -1 = Empty
+                # 0 = Hover
+                # > 0 = Naay sulod
                 pygame.draw.rect(screen, ("black" if self.board[i][j] == -1 else "green"), (xx, yy, self.slotSize, self.slotSize))
+
+    def update(self):
+        self.checkMouseCollision()
+
+    def checkMouseCollision(self):
+        # Set the color of the slot as Gray if the mouse is hovering over it
+        yy = self.y + ((self.slotSize + 2) * self.rows)
+        if (pygame.mouse.get_pos()[0] > self.x and pygame.mouse.get_pos()[1] < yy): # Check if the mouse is inside the board
+            print("Mouse is in the box")
+        else:
+            print("Not in the box")
 
     def print(self):
         for i in self.board:
@@ -39,7 +55,6 @@ class Game:
                     self.running = False
                     
             self.update()
-
             self.draw()
 
             # flip() the display to put your work on screen
@@ -51,14 +66,19 @@ class Game:
 
     def update(self):
         boardSize = 9
-        self.board = Board(boardSize, boardSize, 48)
+        boardSlotSize = 48
+
+        boardX = (self.windowWidth / 2) - (((boardSlotSize+2) * boardSize) / 2)
+        boardY = 8
+        self.board = Board(boardX, boardY, boardSize, boardSize, boardSlotSize)
+
+        self.board.update()
 
     def draw(self):
         # fill the screen with a color to wipe away anything from last frame
         self.screen.fill("purple")
-        boardX = (self.windowWidth / 2) - (((self.board.slotSize+2) * self.board.rows) / 2)
-        boardY = 8
-        self.board.draw(boardX, boardY, self.screen)
+        
+        self.board.draw(self.screen)
 
 if __name__ == '__main__':
     windowHeight = 720
