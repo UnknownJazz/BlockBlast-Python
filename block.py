@@ -1,7 +1,9 @@
 import pygame
-# Mouse States:
+# Block States:
 # -1 - Free
-# 1 - Being dragged by a player
+#  1 - Being dragged by a player
+#  2 - It is hovering an emtpy slot on the board
+
 class Block:
     def __init__(self, dimension, x = -1, y = -1, margin = 2):
         self.dimension = dimension
@@ -46,11 +48,13 @@ class Block:
             height = ((len(self.dimension)) * self.dragSize) + ((len(self.dimension)) * self.margin)
 
             self.dragX = mouse.get_pos()[0] - ((width)/2)
-            self.dragY = mouse.get_pos()[1] - (height * 2)
+            self.dragY = mouse.get_pos()[1] - (height + 32)
         else:
             self.state = 0
             self.dragX = self.x
             self.dragY = self.y
             board.dragBlock = -1
+            board.deployBlock()
+            board.refreshBoard()
 
 

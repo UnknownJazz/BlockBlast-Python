@@ -29,7 +29,8 @@ class Board:
 
     # Update the board state each tick
     def update(self):
-        self.checkBoardCollision()
+        if (self.dragBlock != -1):
+            self.checkBoardCollision()
 
         for i in range(len(self.playerBlocks)):
             currentBlock = self.playerBlocks[i]
@@ -39,10 +40,7 @@ class Board:
                 pygame.mouse.get_pos()[1] > currentBlock.y and pygame.mouse.get_pos()[1] < (currentBlock.y + currentBlock.height)):
                 if (pygame.mouse.get_pressed()[0] and self.dragBlock == -1): 
                     currentBlock.state = 1 # 1 means it is being dragged
-                    self.dragBlock = 1
-        
-
-
+                    self.dragBlock = currentBlock
 
     # Draw uhh... thingies each tick
     def draw(self, screen):
@@ -68,15 +66,16 @@ class Board:
                 block.draw("red", self.screen, self)
 
     # checks if a position is inside the board
-    # Currently it checks the mouse position
     def checkBoardCollision(self):
-        targetX = pygame.mouse.get_pos()[0]
-        targetY = pygame.mouse.get_pos()[1]
+        targetX = self.dragBlock.dragX + (self.slotSize/2)
+        targetY = self.dragBlock.dragY + (self.slotSize/2)
 
         if ((targetX > self.x and targetX < self.width) and (targetY > self.y and targetY < self.height)): # Check if the mouse is inside the board
-            self.checkSlotCollision()
+            self.checkSlotCollision(targetX, targetY)
+        else:
+            self.refreshBoard()
     
-    def checkSlotCollision(self): # checks if the mouse is hovering a slot
+    def checkSlotCollision(self, targetX, targetY): # checks if the mouse is hovering a slot
         margin = 2
         for i in range(len(self.board)): # Row
             yy = self.y + ((self.slotSize + margin) * i)
@@ -84,22 +83,59 @@ class Board:
                 xx = self.x + ((self.slotSize + margin) * j)
                 currentBoard = self.board[i][j]
                 # Check for horizontal and vertical collision
-                targetX = pygame.mouse.get_pos()[0]
-                targetY = pygame.mouse.get_pos()[1]
+                print(f"{self.dragBlock.dragX}, {self.dragBlock.dragY}")
 
+                # If the first slot of the block we are dragging is hovering an empty slot in the board
                 if (targetX > xx and targetX < xx + self.slotSize) and (targetY > yy and targetY < yy + self.slotSize):
-                    
-                    # Set value to a slot if the mouse is pressed and the slot is empty
-                    mouse_pressed = pygame.mouse.get_pressed()[0]
-                    if (currentBoard == -1):
-                        self.setSlotValue(i, j, 0)
-                    if(currentBoard == 0 and mouse_pressed):
-                        self.setSlotValue(i, j, 1)
+                    heldBlock = self.dragBlock.dimension
+                    block_height, block_width = len(heldBlock), len(heldBlock[0])
 
-                        self.checkBlast()
-                else:
-                    if (currentBoard == 0):
-                        self.setSlotValue(i, j, -1)
+                    # Check if the entire heldBlock collides with a value > 0 in the board before proceeding
+                    canPlaceBlock = True
+                    for k in range(i, i + block_height):
+                        for l in range(j, j + block_width):
+                            # Ensure we don't go out of bounds
+                            if k < len(self.board) and l < len(self.board[k]):
+                                # Check only where the heldBlock has a value greater than 0
+                                if heldBlock[k - i][l - j] > 0 and self.board[k][l] > 0:
+                                    canPlaceBlock = False
+                                    break
+                        if not canPlaceBlock:
+                            break
+
+                    # Proceed with updating the board only if no collision with values > 0
+                    if canPlaceBlock:
+                        # First, update the board with the heldBlock values
+                        if (i + block_height <= len(self.board) and j + block_width <= len(self.board[i])):
+                            for k in range(len(self.board)):
+                                for l in range(len(self.board[k])):
+                                    # Check if the position is within the heldBlock's area
+                                    if (i <= k < i + block_height) and (j <= l < j + block_width):
+                                        # Update only if the corresponding heldBlock value is not -1
+                                        if heldBlock[k - i][l - j] != -1:
+                                            if self.board[k][l] == -1:
+                                                self.board[k][l] = 0
+                                        elif (self.board[k][l] == 0):
+                                            self.board[k][l] = -1
+                                    else:
+                                        # Set all other positions to -1
+                                        if (self.board[k][l] == 0):
+                                            self.board[k][l] = -1
+                        else:
+                            self.refreshBoard()
+
+    def refreshBoard(self):
+        for i in range(len(self.board)):
+            for j in range(len(self.board[i])):
+                if (self.board[i][j] == 0):
+                    self.board[i][j] = -1
+
+    def deployBlock(self):
+        for i in range(len(self.board)):
+            for j in range(len(self.board[i])):
+                if (self.board[i][j] == 0):
+                    self.board[i][j] = 1
+        self.checkBlast()
 
     # Blast is when an entire row or column is filled, then boom shaka laka
     def checkBlast(self):
@@ -146,7 +182,8 @@ class Board:
         return block.Block(blockConstruct[random.randint(0, len(blockConstruct)-1)])
 
     def setSlotValue(self, row, column, value):
-        self.board[row][column] = value
+        if (row < len(self.board) and column < len(self.board[row])):
+            self.board[row][column] = value
 
     def print(self):
         for i in self.board:
