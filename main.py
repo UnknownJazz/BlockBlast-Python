@@ -4,6 +4,8 @@ class Board:
     def __init__(self, rows, columns, slotSize = 64):
         self.board = [[-1 for i in range(rows)] for j in range(columns)]
         self.slotSize = slotSize
+        self.rows = rows
+        self.columns = columns
 
     def draw(self, x, y, screen, margin = 2):
         for i in range(len(self.board)): # Row
@@ -49,15 +51,14 @@ class Game:
 
     def update(self):
         boardSize = 9
-        self.board = Board(boardSize, boardSize)
+        self.board = Board(boardSize, boardSize, 48)
 
     def draw(self):
         # fill the screen with a color to wipe away anything from last frame
         self.screen.fill("purple")
-        self.board.draw(3, 3, self.screen)
-
-    
-
+        boardX = (self.windowWidth / 2) - (((self.board.slotSize+2) * self.board.rows) / 2)
+        boardY = 8
+        self.board.draw(boardX, boardY, self.screen)
 
 if __name__ == '__main__':
     windowHeight = 720
