@@ -44,9 +44,11 @@ class Board:
         height = self.y + ((self.slotSize + 2) * self.rows)
         margin = 2
         width = self.x + ((self.slotSize + margin) * self.columns)
-        if ((pygame.mouse.get_pos()[0] > self.x and pygame.mouse.get_pos()[0] < width) and (pygame.mouse.get_pos()[1] > self.y and pygame.mouse.get_pos()[1] < height)): # Check if the mouse is inside the board
+        targetX = pygame.mouse.get_pos()[0]
+        targetY = pygame.mouse.get_pos()[1]
+
+        if ((targetX > self.x and targetX < width) and (targetY > self.y and targetY < height)): # Check if the mouse is inside the board
             self.checkSlotCollision()
-            print("Naa sa board")
     
     def checkSlotCollision(self): # checks if the mouse is hovering a slot
         margin = 2
@@ -56,7 +58,10 @@ class Board:
                 xx = self.x + ((self.slotSize + margin) * j)
                 currentBoard = self.board[i][j]
                 # Check for horizontal and vertical collision
-                if (pygame.mouse.get_pos()[0] > xx and pygame.mouse.get_pos()[0] < xx + self.slotSize) and (pygame.mouse.get_pos()[1] > yy and pygame.mouse.get_pos()[1] < yy + self.slotSize):
+                targetX = pygame.mouse.get_pos()[0]
+                targetY = pygame.mouse.get_pos()[1]
+
+                if (targetX > xx and targetX < xx + self.slotSize) and (targetY > yy and targetY < yy + self.slotSize):
                     
                     # Set value to a slot if the mouse is pressed and the slot is empty
                     mouse_pressed = pygame.mouse.get_pressed()[0]
