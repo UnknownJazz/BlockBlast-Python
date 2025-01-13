@@ -11,6 +11,7 @@ class Board:
         self.y = y
 
     def draw(self, screen, margin = 2):
+        self.margin = margin
         for i in range(len(self.board)): # Row
             yy = self.y + ((self.slotSize + margin) * i)
             for j in range(len(self.board[i])): # Column
@@ -23,13 +24,26 @@ class Board:
     def update(self):
         self.checkMouseCollision()
 
-    def checkMouseCollision(self):
-        # Set the color of the slot as Gray if the mouse is hovering over it
+    def checkMouseCollision(self): # checks if the mouse is inside the board
         yy = self.y + ((self.slotSize + 2) * self.rows)
         if (pygame.mouse.get_pos()[0] > self.x and pygame.mouse.get_pos()[1] < yy): # Check if the mouse is inside the board
             print("Mouse is in the box")
+            self.checkMouseCollisionSlot()
         else:
             print("Not in the box")
+    
+    def checkMouseCollisionSlot(self): # checks if the mouse is hovering a slot
+        margin = 2
+        for i in range(len(self.board)): # Row
+            yy = self.y + ((self.slotSize + margin) * i)
+            for j in range(len(self.board[i])): # Column
+                xx = self.x + ((self.slotSize + margin) * j)
+
+                # Check for horizontal and vertical collision
+                if (pygame.mouse.get_pos()[0] > xx and pygame.mouse.get_pos()[0] < xx + self.slotSize) and (pygame.mouse.get_pos()[1] > yy and pygame.mouse.get_pos()[1] < yy + self.slotSize):
+                    self.board[i][j] = 0
+                else:
+                    self.board[i][j] = -1
 
     def print(self):
         for i in self.board:
