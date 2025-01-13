@@ -1,54 +1,57 @@
 import pygame
 
-def initializeBoard(size):
-    board = [[-1 for i in range(size)] for j in range(size)]
-    return board
+class Board:
+    def __init__(self, rows, columns, slotSize = 64):
+        self.board = [[-1 for i in range(rows)] for j in range(columns)]
+        self.slotSize = slotSize
 
-def printBoard(board):
-    for i in board:
-        print(i)
-
-def drawBoard(x, y, board, surface):
-    rectSize = 48
-    margin = 2
-    for i in range(len(board)): # Row
-        yy = y + ((rectSize + margin) * i)
-        for j in range(len(board[i])): # Column
-            xx = x + ((rectSize + margin) * j)
+    def draw(self, x, y, screen, margin = 2):
+        for i in range(len(self.board)): # Row
+            yy = y + ((self.slotSize + margin) * i)
+        for j in range(len(self.board[i])): # Column
+            xx = x + ((self.slotSize + margin) * j)
             
-            pygame.draw.rect(surface, ("black" if board[i][j] == -1 else "green"), (xx, yy, rectSize, rectSize))
-            
+            pygame.draw.rect(screen, ("black" if self.board[i][j] == -1 else "green"), (xx, yy, self.slotSize, self.slotSize))
 
+class Game:
+    def __init__(self, windowWidth, windowHeight, running = True):
+        self.windowWidth = windowWidth
+        self.windowHeight = windowHeight
 
-def game(windowWidth = 1280, windowHeight = 720):
-    # pygame setup
-    pygame.init()
-    screen = pygame.display.set_mode((windowWidth, windowHeight))
-    clock = pygame.time.Clock()
-    running = True
+        # pygame setup
+        pygame.init()
+        self.screen = pygame.display.set_mode((windowWidth, windowHeight))
+        self.clock = pygame.time.Clock()
+        self.running = running
 
-    while running:
-        # poll for events
-        # pygame.QUIT event means the user clicked X to close your window
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
+    def run(self):
+        while self.running:
+            # poll for events
+            # pygame.QUIT event means the user clicked X to close your window
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
 
-        # fill the screen with a color to wipe away anything from last frame
-        screen.fill("purple")
+            # fill the screen with a color to wipe away anything from last frame
+            self.screen.fill("purple")
 
-        board = initializeBoard(9)
-        board[3][3] = 1
+            # flip() the display to put your work on screen
+            pygame.display.flip()
 
-        # RENDER YOUR GAME HERE
-        drawBoard(64, 64, board, screen)
-        # flip() the display to put your work on screen
-        pygame.display.flip()
+            self.clock.tick(60)  # limits FPS to 60
 
-        clock.tick(60)  # limits FPS to 60
+        pygame.quit()
 
-    pygame.quit()
+    def printBoard(board):
+        for i in board:
+            print(i)
+
 
 if __name__ == '__main__':
-    game()
+    windowHeight = 720
+    windowWidth = 1280
+
+    game = Game(windowWidth, windowHeight)
+
+    game.run()
 
