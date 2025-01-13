@@ -10,15 +10,21 @@ class Board:
         self.x = x
         self.y = y
         self.screen = screen
+        self.margin = 2
+        self.width = self.x + ((self.slotSize + self.margin) * self.columns)
+        self.height = self.y + ((self.slotSize + self.margin) * self.rows)
 
-        self.playerBlock = block.Block([[1, -1, 1, -1], [1, -1, -1, 1]])
+        blockSize = 24
+        self.playerBlocks = [block.Block([[1, -1, -1, -1], [1, 1, 1, 1]]), 
+                             block.Block([[1, 1, 1, 1, 1]]), 
+                             block.Block([[1, 1, 1, 1], [-1, -1, -1, 1], [-1, -1, -1, 1]])]
 
     # Update the board state each tick
     def update(self):
         self.checkBoardCollision()
 
     # Draw uhh... thingies each tick
-    def draw(self, screen, margin = 2):
+    def draw(self, screen):
         colors = {
             -1 : pygame.Color(33, 44, 82),
             0 : "gray",
@@ -26,28 +32,32 @@ class Board:
         }
 
         # Draw each slot of the board
-        self.margin = margin
         for i in range(len(self.board)): # Row
-            yy = self.y + ((self.slotSize + margin) * i)
+            yy = self.y + ((self.slotSize + self.margin) * i)
             for j in range(len(self.board[i])): # Column
-                xx = self.x + ((self.slotSize + margin) * j)
+                xx = self.x + ((self.slotSize + self.margin) * j)
                 # -1 = Empty
                 # 0 = Hover
                 # > 0 = Naay sulod
                 pygame.draw.rect(screen, (colors[self.board[i][j]]), (xx, yy, self.slotSize, self.slotSize))
         
-        self.playerBlock.draw(500, 500, "red", self.screen)
-    
+        # Draw each available blocks at the bottom of the board
+        for i in range(len(self.playerBlocks)):
+            if (self.playerBlocks[i] != -1):
+                numberOfBlocks = len(self.playerBlocks)
+                xx = self.x + ((((self.width - self.x) / numberOfBlocks) * i) + (((self.width - self.x) / numberOfBlocks) / 2)) - (self.playerBlocks[i].width / 2)
+                yy = self.y + (self.height + 92) - (self.playerBlocks[i].height / 2)
+
+                self.playerBlocks[i].setPosition(xx, yy)
+                self.playerBlocks[i].draw("red", self.screen)
+
     # checks if a position is inside the board
     # Currently it checks the mouse position
     def checkBoardCollision(self):
-        height = self.y + ((self.slotSize + 2) * self.rows)
-        margin = 2
-        width = self.x + ((self.slotSize + margin) * self.columns)
         targetX = pygame.mouse.get_pos()[0]
         targetY = pygame.mouse.get_pos()[1]
 
-        if ((targetX > self.x and targetX < width) and (targetY > self.y and targetY < height)): # Check if the mouse is inside the board
+        if ((targetX > self.x and targetX < self.width) and (targetY > self.y and targetY < self.height)): # Check if the mouse is inside the board
             self.checkSlotCollision()
     
     def checkSlotCollision(self): # checks if the mouse is hovering a slot
@@ -76,7 +86,7 @@ class Board:
                         self.setSlotValue(i, j, -1)
 
     # Blast is when an entire row or column is filled, then boom shaka laka
-    def checkBlast(self): 
+    def checkBlast(self):
         # Check Horizontal Blast
         for i in range(len(self.board)):
             flag = False
