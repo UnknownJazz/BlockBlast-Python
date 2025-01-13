@@ -1,6 +1,5 @@
 import pygame
 import board
-
 class Game:
     def __init__(self, windowWidth, windowHeight, running = True):
         self.windowWidth = windowWidth
@@ -30,7 +29,7 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
-                    
+            
             self.update()
             self.draw()
 

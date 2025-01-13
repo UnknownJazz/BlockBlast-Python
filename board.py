@@ -1,5 +1,6 @@
 import pygame
 import block
+import random
 
 class Board:
     def __init__(self, x, y, rows, columns, screen, slotSize = 64):
@@ -14,14 +15,30 @@ class Board:
         self.width = self.x + ((self.slotSize + self.margin) * self.columns)
         self.height = self.y + ((self.slotSize + self.margin) * self.rows)
 
-        blockSize = 24
-        self.playerBlocks = [block.Block([[1, -1, -1, -1], [1, 1, 1, 1]]), 
-                             block.Block([[1, 1, 1, 1, 1]]), 
-                             block.Block([[1, 1, 1, 1], [-1, -1, -1, 1], [-1, -1, -1, 1]])]
+        self.playerBlocks = [self.generateBlocks(),self.generateBlocks(),self.generateBlocks()]
+        
+        for i in range(len(self.playerBlocks)):
+            if (self.playerBlocks[i] != -1):
+                numberOfBlocks = len(self.playerBlocks)
+                xx = self.x + ((((self.width - self.x) / numberOfBlocks) * i) + (((self.width - self.x) / numberOfBlocks) / 2)) - (self.playerBlocks[i].width / 2)
+                yy = self.y + (self.height + 92) - (self.playerBlocks[i].height / 2)
+
+                self.playerBlocks[i].setPosition(xx, yy)
 
     # Update the board state each tick
     def update(self):
         self.checkBoardCollision()
+
+        # Check mouse position if it is hovering a block
+        for i in range(len(self.playerBlocks)):
+            currentBlock = self.playerBlocks[i]
+            if (pygame.mouse.get_pos()[0] > currentBlock.x and 
+                pygame.mouse.get_pos()[0] < (currentBlock.x + currentBlock.width) and 
+                pygame.mouse.get_pos()[1] > currentBlock.y and
+                pygame.mouse.get_pos()[1] < (currentBlock.y + currentBlock.height)):
+                if (pygame.mouse.get_pressed()[0]): 
+                    currentBlock.state = 1 # 1 means it is being dragged
+                
 
     # Draw uhh... thingies each tick
     def draw(self, screen):
@@ -42,14 +59,9 @@ class Board:
                 pygame.draw.rect(screen, (colors[self.board[i][j]]), (xx, yy, self.slotSize, self.slotSize))
         
         # Draw each available blocks at the bottom of the board
-        for i in range(len(self.playerBlocks)):
-            if (self.playerBlocks[i] != -1):
-                numberOfBlocks = len(self.playerBlocks)
-                xx = self.x + ((((self.width - self.x) / numberOfBlocks) * i) + (((self.width - self.x) / numberOfBlocks) / 2)) - (self.playerBlocks[i].width / 2)
-                yy = self.y + (self.height + 92) - (self.playerBlocks[i].height / 2)
-
-                self.playerBlocks[i].setPosition(xx, yy)
-                self.playerBlocks[i].draw("red", self.screen)
+        for block in self.playerBlocks:
+            if (block != -1):
+                block.draw("red", self.screen)
 
     # checks if a position is inside the board
     # Currently it checks the mouse position
@@ -117,8 +129,17 @@ class Board:
         for i in range(len(self.board)):
             self.board[i][column] = -1
 
-    def generateBlocks():
-        pass
+    def generateBlocks(self):
+        blockConstruct = {
+            0 : [[1, 1, 1, 1, 1 ]],
+            1 : [[1, -1, -1, -1], [1, 1, 1, 1]],
+            2 : [[1, 1, 1, 1], [-1, -1, -1, 1], [-1, -1, -1, 1]],
+            3 : [[1]],
+            4 : [[1, 1]],
+            5 : [[1, 1],[-1, 1]]
+        }
+
+        return block.Block(blockConstruct[random.randint(0, len(blockConstruct)-1)])
 
     def setSlotValue(self, row, column, value):
         self.board[row][column] = value
