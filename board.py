@@ -56,9 +56,43 @@ class Board:
                         self.setSlotValue(i, j, 0)
                     if(currentBoard == 0 and mouse_pressed):
                         self.setSlotValue(i, j, 1)
+
+                        self.checkBlast()
                 else:
                     if (currentBoard == 0):
                         self.setSlotValue(i, j, -1)
+
+    # Blast is when an entire row or column is filled, then boom shaka laka
+    def checkBlast(self): 
+        # Check Horizontal Blast
+        for i in range(len(self.board)):
+            flag = False
+            for j in range(len(self.board[i])):
+                if (self.board[i][j] < 1):
+                    flag = True
+                    break
+            if (flag == False):
+                self.blastRow(i)
+        
+        # Check Vertical Blast
+        for i in range(len(self.board)):
+            flag = False
+            for j in range(len(self.board[i])):
+                if (self.board[j][i] < 1):
+                    flag = True
+                    break
+            if (flag == False):
+                self.blastColumn(i)
+
+    # Remove an entire Row
+    def blastRow(self, row):
+        for i in range(len(self.board[row])):
+            self.board[row][i] = -1
+
+    # Remove an entire Column
+    def blastColumn(self, column):
+        for i in range(len(self.board)):
+            self.board[i][column] = -1
 
     def generateBlocks():
         pass
