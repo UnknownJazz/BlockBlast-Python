@@ -91,16 +91,23 @@ class Board:
                 if (self.board[i][j] == 0):
                     self.setSlotValue(i, j, -1)
 
-    def deployBlock(self, block):
+    def deployBlock(self, block, board = None, value = None, target = None):
+        if (board == None):
+            board = self.board
+        if (target == None):
+            target = 0
+        if (value == None):
+            value = block.value
+
         deployed = False
-        for i in range(len(self.board)):
-            for j in range(len(self.board[i])):
-                if (self.board[i][j] == 0):
-                    self.setSlotValue(i, j, block.value)
+        for i in range(len(board)):
+            for j in range(len(board[i])):
+                if (board[i][j] == target):
+                    self.setSlotValue(i, j, value)
                     deployed = True
         
         if (deployed):
-            self.checkBlast()
+            self.checkBlast(board)
             self.playerBlocks[self.dragBlockIndex] = None
 
     # checks if a position is inside the board
@@ -115,7 +122,6 @@ class Board:
             yy = self.y + ((self.slotSize + self.margin) * i)
             for j in range(len(self.board[i])): # Column
                 xx = self.x + ((self.slotSize + self.margin) * j)
-                currentBoard = self.board[i][j]
 
                 # Check for horizontal and vertical collision
                 # If the first slot of the block we are dragging is hovering an empty slot in the board
@@ -147,28 +153,32 @@ class Board:
                         self.refreshBoard()
 
     # Blast is when an entire row or column is filled, then boom shaka laka
-    def checkBlast(self):
+    def checkBlast(self, board = None):
+        if (board == None):
+            board = self.board
         # Check Horizontal lines
-        for i in range(len(self.board)):
+        for i in range(len(board)):
             flag = False
-            for j in range(len(self.board[i])):
-                if (self.board[i][j] < 1):
+            for j in range(len(board[i])):
+                if (board[i][j] < 1):
                     flag = True
                     break
             if (flag == False):
-                self.blastRow(i)
+                self.blastRow(i, board)
         
         # Check Vertical lines
-        for i in range(len(self.board)):
+        for i in range(len(board)):
             flag = False
-            for j in range(len(self.board[i])):
-                if (self.board[j][i] < 1):
+            for j in range(len(board[i])):
+                if (board[j][i] < 1):
                     flag = True
                     break
             if (flag == False):
-                self.blastColumn(i)
+                self.blastColumn(i, board)
 
-    def checkBlockPlacement(self, row, column, blockDimension):
+    def checkBlockPlacement(self, row, column, blockDimension, board = None):
+        if (board == None):
+            board = self.board
         blockHeight, blockWidth = len(blockDimension), len(blockDimension[0])
 
         # Check if the entire block collides with a value > 0 in the board before proceeding
@@ -176,24 +186,29 @@ class Board:
         for k in range(row, row + blockHeight):
             for l in range(column, column + blockWidth):
                 # Ensure we don't go out of bounds
-                if k < len(self.board) and l < len(self.board[k]):
+                if k < len(board) and l < len(board[k]):
                     # Check only where the block has a value greater than 0
-                    if blockDimension[k - row][l - column] > 0 and self.board[k][l] > 0:
+                    if blockDimension[k - row][l - column] > 0 and board[k][l] > 0:
                         canPlaceBlock = False
                         break
             if (canPlaceBlock == False):
                 break
         return canPlaceBlock
 
-
     # Remove an entire Row
-    def blastRow(self, row):
-        for i in range(len(self.board[row])):
+    def blastRow(self, row, board = None):
+        if (board == None):
+            board = self.board
+
+        for i in range(len(board[row])):
             self.setSlotValue(row, i, -1)
 
     # Remove an entire Column
-    def blastColumn(self, column):
-        for i in range(len(self.board)):
+    def blastColumn(self, column, board = None):
+        if (board == None):
+            board = self.board
+
+        for i in range(len(board)):
             self.setSlotValue(i, column, -1)
 
     # Returns a block class with a random construct
@@ -237,15 +252,41 @@ class Board:
     
     # Refills the player blocks with a set of new block
     def refillPlayerBlocks(self):
+        # Player must use all three blocks first before generating new ones
         emptyBlocks = True
         for block in self.playerBlocks:
             if (block != None):
                 emptyBlocks = False
         
         if (emptyBlocks):
+            # Add blocks
+            transposedBoard = self.board
             for i in range(len(self.playerBlocks)):
-                self.playerBlocks[i] = self.generateBlocks()
+                # Generate Blocks for the player
+                while self.playerBlocks[i] is None:
+                    generatedBlock = self.generateBlocks()
+                    blockHeight, blockWidth = len(generatedBlock.dimension), len(generatedBlock.dimension[0])
+                    generateNew = True
 
+                    # Check if the block can fit anywhere on the board
+                    for j in range(len(self.board) - blockHeight + 1):
+                        for k in range(len(self.board[j]) - blockWidth + 1):
+                            if self.checkBlockPlacement(j, k, generatedBlock.dimension, transposedBoard):
+                                generateNew = False  # Found a valid placement
+                                self.deployBlock(generatedBlock, transposedBoard)
+                                break
+                        if not generateNew:
+                            break
+
+                    if not generateNew:
+                        # Assign the generated block since it fits
+                        self.playerBlocks[i] = generatedBlock
+                    else:
+                        # If no valid placement exists, generate a new block
+                        continue
+
+
+            # Set the position of the blocks below the board
             for i in range(len(self.playerBlocks)):
                 if (self.playerBlocks[i] != -1):
                     numberOfBlocks = len(self.playerBlocks)
