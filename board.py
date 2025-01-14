@@ -15,6 +15,18 @@ class Board:
         self.width = self.x + ((self.slotSize + self.margin) * self.columns)
         self.height = self.y + ((self.slotSize + self.margin) * self.rows)
 
+        self.colorValue = {
+            -1 : pygame.Color(33, 44, 82),
+            0 : "gray",
+            1 : "chartreuse3",
+            2 : "blue",
+            3 : "aqua",
+            4: "chocolate1",
+            5 : "crimson",
+            6 : "darkorchid1",
+        }
+
+
         self.dragBlock = None
         self.dragBlockIndex = None
 
@@ -51,12 +63,6 @@ class Board:
 
     # Draw uhh... thingies each tick
     def draw(self, screen):
-        colors = {
-            -1 : pygame.Color(33, 44, 82),
-            0 : "gray",
-            1 : "green"
-        }
-
         # Draw each slot of the board
         for i in range(len(self.board)): # Row
             yy = self.y + ((self.slotSize + self.margin) * i)
@@ -65,12 +71,12 @@ class Board:
                 # -1 = Empty
                 # 0 = Hover
                 # > 0 = Naay sulod
-                pygame.draw.rect(screen, (colors[self.board[i][j]]), (xx, yy, self.slotSize, self.slotSize))
+                pygame.draw.rect(screen, (self.colorValue[self.board[i][j]]), (xx, yy, self.slotSize, self.slotSize))
         
         # Draw each available blocks at the bottom of the board
         for block in self.playerBlocks:
             if (block != None):
-                block.draw("red", self.screen, self)
+                block.draw(self.screen, self)
 
     # checks if a position is inside the board
     def checkBoardCollision(self):
@@ -135,12 +141,12 @@ class Board:
                 if (self.board[i][j] == 0):
                     self.board[i][j] = -1
 
-    def deployBlock(self):
+    def deployBlock(self, block):
         deployed = False
         for i in range(len(self.board)):
             for j in range(len(self.board[i])):
                 if (self.board[i][j] == 0):
-                    self.board[i][j] = 1
+                    self.board[i][j] = block.value
                     deployed = True
         
         if (deployed):
@@ -180,20 +186,6 @@ class Board:
             self.board[i][column] = -1
 
     def generateBlocks(self):
-        '''
-        blockConstruct = {
-            0 : [[1, 1, 1, 1]],
-            1 : [[1, -1, -1], [1, 1, 1]],
-            2 : [[1, 1, 1], [-1, -1, 1], [-1, -1, 1]],
-            3 : [[1]],
-            4 : [[1, 1]],
-            5 : [[1, 1],[-1, 1]],
-            6 : [[1, 1], [1, 1]],
-            7 : [[1, 1], [1, 1], [1, 1]],
-            8 : [[1, 1, 1], [1, 1, 1]],
-            9 : [[1, 1, 1], [1, 1, 1], [1, 1, 1]],
-        }
-        '''
         blockConstruct = {
             0: [[1]],  # Single block
             1: [[1, 1]],  # Horizontal line (2)
@@ -226,7 +218,9 @@ class Board:
             construct = list(zip(*construct[::-1]))
             rollCount -= 1
 
-        return block.Block(construct)
+        value = random.randint(1, len(self.colorValue)-2)
+
+        return block.Block(construct, value)
     
     def refillPlayerBlocks(self):
         emptyBlocks = True

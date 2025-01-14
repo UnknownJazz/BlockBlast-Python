@@ -5,8 +5,9 @@ import pygame
 #  2 - It is hovering an emtpy slot on the board
 
 class Block:
-    def __init__(self, dimension, x = -1, y = -1, margin = 2):
+    def __init__(self, dimension, value = 1, x = -1, y = -1, margin = 2):
         self.dimension = dimension
+        self.value = value
         self.x = x
         self.y = y
         self.dragX = self.x
@@ -19,7 +20,8 @@ class Block:
         self.height = ((len(self.dimension)) * self.size) + ((len(self.dimension)) * self.margin)
 
         
-    def draw(self, color, screen, board):
+    def draw(self, screen, board):
+        color = board.colorValue[self.value]
         pygame.draw.rect(screen, "white", (self.x - self.margin, self.y - self.margin, self.width + self.margin, self.height + self.margin))
         
         if (self.state == 1):
@@ -54,7 +56,7 @@ class Block:
             self.dragX = self.x
             self.dragY = self.y
 
-            board.deployBlock()
+            board.deployBlock(self)
             board.dragBlock = None
             board.dragBlockIndex = None
             board.refreshBoard()
