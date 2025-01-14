@@ -21,7 +21,8 @@ class Block:
 
         
     def draw(self, screen, board):
-        color = board.colorValue[self.value]
+        cellImage = board.colorValue[self.value]
+        cellImage = pygame.transform.scale(cellImage, (self.dragSize, self.dragSize))
         pygame.draw.rect(screen, "white", (self.x - self.margin, self.y - self.margin, self.width + self.margin, self.height + self.margin))
         
         if (self.state == 1):
@@ -35,7 +36,7 @@ class Block:
                 xx = self.dragX + ((self.dragSize + self.margin) * j)
 
                 if (self.dimension[i][j] != -1):
-                    pygame.draw.rect(screen, color, (xx, yy, self.dragSize, self.dragSize))
+                    screen.blit(cellImage, (xx, yy))
 
     def setPosition(self, x, y):
         self.x = x

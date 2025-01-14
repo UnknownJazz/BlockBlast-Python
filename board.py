@@ -18,12 +18,11 @@ class Board:
         self.colorValue = {
             -1 : pygame.Color(33, 44, 82),
             0 : "gray",
-            1 : "chartreuse3",
-            2 : "blue",
-            3 : "aqua",
-            4: "chocolate1",
-            5 : "crimson",
-            6 : "darkorchid1",
+            1 : pygame.image.load('assets\Block Cell1.png'),
+            2 : pygame.image.load('assets\Block Cell2.png'),
+            3 : pygame.image.load('assets\Block Cell3.png'),
+            4 : pygame.image.load('assets\Block Cell4.png'),
+            5 : pygame.image.load('assets\Block Cell5.png'),
         }
 
 
@@ -63,6 +62,9 @@ class Board:
 
     # Draw uhh... thingies each tick
     def draw(self, screen):
+        # Draw a dark background around the board
+        pygame.draw.rect(screen, pygame.Color(23, 29, 77), (self.x - self.margin, self.y - self.margin, (self.width - self.x) + self.margin, (self.height - self.y) + self.margin))
+
         # Draw each slot of the board
         for i in range(len(self.board)): # Row
             yy = self.y + ((self.slotSize + self.margin) * i)
@@ -71,7 +73,13 @@ class Board:
                 # -1 = Empty
                 # 0 = Hover
                 # > 0 = Naay sulod
-                pygame.draw.rect(screen, (self.colorValue[self.board[i][j]]), (xx, yy, self.slotSize, self.slotSize))
+                
+                if (self.board[i][j] < 1):
+                    pygame.draw.rect(screen, (self.colorValue[self.board[i][j]]), (xx, yy, self.slotSize, self.slotSize))
+                else:
+                    cellImage = self.colorValue[self.board[i][j]]
+                    cellImage = pygame.transform.scale(cellImage, (self.slotSize, self.slotSize))
+                    self.screen.blit(cellImage, (xx, yy))
         
         # Draw each available blocks at the bottom of the board
         for block in self.playerBlocks:
@@ -89,11 +97,10 @@ class Board:
             self.refreshBoard()
     
     def checkSlotCollision(self, targetX, targetY): # checks if the mouse is hovering a slot
-        margin = 2
         for i in range(len(self.board)): # Row
-            yy = self.y + ((self.slotSize + margin) * i)
+            yy = self.y + ((self.slotSize + self.margin) * i)
             for j in range(len(self.board[i])): # Column
-                xx = self.x + ((self.slotSize + margin) * j)
+                xx = self.x + ((self.slotSize + self.margin) * j)
                 currentBoard = self.board[i][j]
                 # Check for horizontal and vertical collision
                 # If the first slot of the block we are dragging is hovering an empty slot in the board
