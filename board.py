@@ -115,6 +115,7 @@ class Board:
                                     canPlaceBlock = False
                                     break
                         if not canPlaceBlock:
+                            self.refreshBoard()
                             break
 
                     # Proceed with updating the board only if no collision with values > 0
