@@ -3,7 +3,7 @@ import block
 import random
 
 class Board:
-    def __init__(self, x, y, rows, columns, screen, slotSize = 64):
+    def __init__(self, x, y, rows, columns, screen, game, slotSize = 64):
         self.board = [[-1 for i in range(rows)] for j in range(columns)]
         self.slotSize = slotSize
         self.rows = rows
@@ -85,6 +85,24 @@ class Board:
             if (block != None):
                 block.draw(self.screen, self)
 
+    def refreshBoard(self):
+        for i in range(len(self.board)):
+            for j in range(len(self.board[i])):
+                if (self.board[i][j] == 0):
+                    self.setSlotValue(i, j, -1)
+
+    def deployBlock(self, block):
+        deployed = False
+        for i in range(len(self.board)):
+            for j in range(len(self.board[i])):
+                if (self.board[i][j] == 0):
+                    self.setSlotValue(i, j, block.value)
+                    deployed = True
+        
+        if (deployed):
+            self.checkBlast()
+            self.playerBlocks[self.dragBlockIndex] = None
+
     # checks if a position is inside the board
     def checkBoardCollision(self, targetX, targetY):
         if ((targetX > self.x and targetX < self.width) and (targetY > self.y and targetY < self.height)): # Check if the mouse is inside the board
@@ -98,28 +116,15 @@ class Board:
             for j in range(len(self.board[i])): # Column
                 xx = self.x + ((self.slotSize + self.margin) * j)
                 currentBoard = self.board[i][j]
+
                 # Check for horizontal and vertical collision
                 # If the first slot of the block we are dragging is hovering an empty slot in the board
                 if (targetX > xx and targetX < xx + self.slotSize) and (targetY > yy and targetY < yy + self.slotSize):
                     heldBlock = self.dragBlock.dimension
                     block_height, block_width = len(heldBlock), len(heldBlock[0])
 
-                    # Check if the entire heldBlock collides with a value > 0 in the board before proceeding
-                    canPlaceBlock = True
-                    for k in range(i, i + block_height):
-                        for l in range(j, j + block_width):
-                            # Ensure we don't go out of bounds
-                            if k < len(self.board) and l < len(self.board[k]):
-                                # Check only where the heldBlock has a value greater than 0
-                                if heldBlock[k - i][l - j] > 0 and self.board[k][l] > 0:
-                                    canPlaceBlock = False
-                                    break
-                        if not canPlaceBlock:
-                            self.refreshBoard()
-                            break
-
                     # Proceed with updating the board only if no collision with values > 0
-                    if canPlaceBlock:
+                    if (self.checkBlockPlacement(i, j, self.dragBlock.dimension)):
                         # First, update the board with the heldBlock values
                         if (i + block_height <= len(self.board) and j + block_width <= len(self.board[i])):
                             for k in range(len(self.board)):
@@ -138,24 +143,8 @@ class Board:
                                             self.setSlotValue(k, l, -1)
                         else:
                             self.refreshBoard()
-
-    def refreshBoard(self):
-        for i in range(len(self.board)):
-            for j in range(len(self.board[i])):
-                if (self.board[i][j] == 0):
-                    self.setSlotValue(i, j, -1)
-
-    def deployBlock(self, block):
-        deployed = False
-        for i in range(len(self.board)):
-            for j in range(len(self.board[i])):
-                if (self.board[i][j] == 0):
-                    self.setSlotValue(i, j, block.value)
-                    deployed = True
-        
-        if (deployed):
-            self.checkBlast()
-            self.playerBlocks[self.dragBlockIndex] = None
+                    else:
+                        self.refreshBoard()
 
     # Blast is when an entire row or column is filled, then boom shaka laka
     def checkBlast(self):
@@ -178,6 +167,24 @@ class Board:
                     break
             if (flag == False):
                 self.blastColumn(i)
+
+    def checkBlockPlacement(self, row, column, blockDimension):
+        blockHeight, blockWidth = len(blockDimension), len(blockDimension[0])
+
+        # Check if the entire block collides with a value > 0 in the board before proceeding
+        canPlaceBlock = True
+        for k in range(row, row + blockHeight):
+            for l in range(column, column + blockWidth):
+                # Ensure we don't go out of bounds
+                if k < len(self.board) and l < len(self.board[k]):
+                    # Check only where the block has a value greater than 0
+                    if blockDimension[k - row][l - column] > 0 and self.board[k][l] > 0:
+                        canPlaceBlock = False
+                        break
+            if (canPlaceBlock == False):
+                break
+        return canPlaceBlock
+
 
     # Remove an entire Row
     def blastRow(self, row):

@@ -17,7 +17,7 @@ class Game:
 
         boardX = (self.windowWidth / 2) - (((boardSlotSize+2) * boardSize) / 2)
         boardY = 64
-        self.board = board.Board(boardX, boardY, boardSize, boardSize, self.screen, boardSlotSize)
+        self.board = board.Board(boardX, boardY, boardSize, boardSize, self.screen, self, boardSlotSize)
 
         # create the blocks below the board
 
