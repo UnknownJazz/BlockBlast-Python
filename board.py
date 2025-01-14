@@ -25,7 +25,6 @@ class Board:
             5 : pygame.image.load('assets\Block Cell5.png'),
         }
 
-
         self.dragBlock = None
         self.dragBlockIndex = None
 
@@ -42,7 +41,7 @@ class Board:
     # Update the board state each tick
     def update(self):
         if (self.dragBlock != None):
-            self.checkBoardCollision()
+            self.checkBoardCollision(self.dragBlock.dragX + (self.slotSize/2), self.dragBlock.dragY + (self.slotSize/2))
 
         # Allow the player to drag the blocks to the board
         for i in range(len(self.playerBlocks)):
@@ -87,10 +86,7 @@ class Board:
                 block.draw(self.screen, self)
 
     # checks if a position is inside the board
-    def checkBoardCollision(self):
-        targetX = self.dragBlock.dragX + (self.slotSize/2)
-        targetY = self.dragBlock.dragY + (self.slotSize/2)
-
+    def checkBoardCollision(self, targetX, targetY):
         if ((targetX > self.x and targetX < self.width) and (targetY > self.y and targetY < self.height)): # Check if the mouse is inside the board
             self.checkSlotCollision(targetX, targetY)
         else:
@@ -132,13 +128,13 @@ class Board:
                                         # Update only if the corresponding heldBlock value is not -1
                                         if heldBlock[k - i][l - j] != -1:
                                             if self.board[k][l] == -1:
-                                                self.board[k][l] = 0
+                                                self.setSlotValue(k, l, 0)
                                         elif (self.board[k][l] == 0):
-                                            self.board[k][l] = -1
+                                            self.setSlotValue(k, l, -1)
                                     else:
                                         # Set all other positions to -1
                                         if (self.board[k][l] == 0):
-                                            self.board[k][l] = -1
+                                            self.setSlotValue(k, l, -1)
                         else:
                             self.refreshBoard()
 
@@ -146,14 +142,14 @@ class Board:
         for i in range(len(self.board)):
             for j in range(len(self.board[i])):
                 if (self.board[i][j] == 0):
-                    self.board[i][j] = -1
+                    self.setSlotValue(i, j, -1)
 
     def deployBlock(self, block):
         deployed = False
         for i in range(len(self.board)):
             for j in range(len(self.board[i])):
                 if (self.board[i][j] == 0):
-                    self.board[i][j] = block.value
+                    self.setSlotValue(i, j, block.value)
                     deployed = True
         
         if (deployed):
@@ -162,7 +158,7 @@ class Board:
 
     # Blast is when an entire row or column is filled, then boom shaka laka
     def checkBlast(self):
-        # Check Horizontal Blast
+        # Check Horizontal lines
         for i in range(len(self.board)):
             flag = False
             for j in range(len(self.board[i])):
@@ -172,7 +168,7 @@ class Board:
             if (flag == False):
                 self.blastRow(i)
         
-        # Check Vertical Blast
+        # Check Vertical lines
         for i in range(len(self.board)):
             flag = False
             for j in range(len(self.board[i])):
@@ -185,13 +181,14 @@ class Board:
     # Remove an entire Row
     def blastRow(self, row):
         for i in range(len(self.board[row])):
-            self.board[row][i] = -1
+            self.setSlotValue(row, i, -1)
 
     # Remove an entire Column
     def blastColumn(self, column):
         for i in range(len(self.board)):
-            self.board[i][column] = -1
+            self.setSlotValue(i, column, -1)
 
+    # Returns a block class with a random construct
     def generateBlocks(self):
         blockConstruct = {
             0: [[1]],  # Single block
@@ -213,6 +210,7 @@ class Board:
             16: [[-1, -1, 1], [1, 1, 1]],  # Reverse L-shape (2x3 variant)
             17: [[1, 1, 1], [1, 1, 1], [1, 1, 1]], # Square (3x3)
             18: [[1, 1, 1], [-1, -1, 1], [-1, -1, 1]], # L-shape (3x3)
+            19: [[-1, 1], [1, -1]],
         }
         construct = blockConstruct[random.randint(0, len(blockConstruct)-1)]
 
@@ -229,6 +227,7 @@ class Board:
 
         return block.Block(construct, value)
     
+    # Refills the player blocks with a set of new block
     def refillPlayerBlocks(self):
         emptyBlocks = True
         for block in self.playerBlocks:
@@ -247,6 +246,7 @@ class Board:
 
                     self.playerBlocks[i].setPosition(xx, yy)
 
+    # Sets the value of a slot in the board
     def setSlotValue(self, row, column, value):
         if (row < len(self.board) and column < len(self.board[row])):
             self.board[row][column] = value
