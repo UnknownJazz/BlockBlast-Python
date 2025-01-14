@@ -24,7 +24,7 @@ class Board:
             if (self.playerBlocks[i] != -1):
                 numberOfBlocks = len(self.playerBlocks)
                 xx = self.x + ((((self.width - self.x) / numberOfBlocks) * i) + (((self.width - self.x) / numberOfBlocks) / 2)) - (self.playerBlocks[i].width / 2)
-                yy = self.y + (self.height + 92) - (self.playerBlocks[i].height / 2)
+                yy = self.y + (self.height) - (self.playerBlocks[i].height / 2)
 
                 self.playerBlocks[i].setPosition(xx, yy)
 
@@ -33,6 +33,7 @@ class Board:
         if (self.dragBlock != None):
             self.checkBoardCollision()
 
+        # Allow the player to drag the blocks to the board
         for i in range(len(self.playerBlocks)):
             currentBlock = self.playerBlocks[i]
             
@@ -89,8 +90,6 @@ class Board:
                 xx = self.x + ((self.slotSize + margin) * j)
                 currentBoard = self.board[i][j]
                 # Check for horizontal and vertical collision
-                print(f"{self.dragBlock.dragX}, {self.dragBlock.dragY}")
-
                 # If the first slot of the block we are dragging is hovering an empty slot in the board
                 if (targetX > xx and targetX < xx + self.slotSize) and (targetY > yy and targetY < yy + self.slotSize):
                     heldBlock = self.dragBlock.dimension
@@ -181,16 +180,53 @@ class Board:
             self.board[i][column] = -1
 
     def generateBlocks(self):
+        '''
         blockConstruct = {
             0 : [[1, 1, 1, 1]],
             1 : [[1, -1, -1], [1, 1, 1]],
             2 : [[1, 1, 1], [-1, -1, 1], [-1, -1, 1]],
             3 : [[1]],
             4 : [[1, 1]],
-            5 : [[1, 1],[-1, 1]]
+            5 : [[1, 1],[-1, 1]],
+            6 : [[1, 1], [1, 1]],
+            7 : [[1, 1], [1, 1], [1, 1]],
+            8 : [[1, 1, 1], [1, 1, 1]],
+            9 : [[1, 1, 1], [1, 1, 1], [1, 1, 1]],
         }
+        '''
+        blockConstruct = {
+            0: [[1]],  # Single block
+            1: [[1, 1]],  # Horizontal line (2)
+            2: [[1], [1]],  # Vertical line (2)
+            3: [[1, 1, 1]],  # Horizontal line (3)
+            4: [[1], [1], [1]],  # Vertical line (3)
+            5: [[1, 1, 1, 1]],  # Horizontal line (4)
+            6: [[1], [1], [1], [1]],  # Vertical line (4)
+            7: [[1, 1], [1, 1]],  # Square (2x2)
+            8: [[1, 1, -1], [-1, 1, 1]],  # Z-shape
+            9: [[-1, 1, 1], [1, 1, -1]],  # S-shape
+            10: [[1, -1], [1, 1], [-1, 1]],  # T-shape (2x2)
+            11: [[1, 1, 1], [-1, 1, -1]],  # T-shape
+            12: [[1, 1, -1], [1, 1, 1]],  # L-shape (rotated variant)
+            13: [[-1, 1], [-1, 1], [1, 1]],  # L-shape (2x2)
+            14: [[1, -1], [1, -1], [1, 1]],  # Reverse L-shape (longer variant)
+            15: [[1, 1, 1], [1, -1, -1]],  # L-shape (2x3 matrix variant)
+            16: [[-1, -1, 1], [1, 1, 1]],  # Reverse L-shape (2x3 variant)
+            17: [[1, 1, 1], [1, 1, 1], [1, 1, 1]], # Square (3x3)
+            18: [[1, 1, 1], [-1, -1, 1], [-1, -1, 1]], # L-shape (3x3)
+        }
+        construct = blockConstruct[random.randint(0, len(blockConstruct)-1)]
 
-        return block.Block(blockConstruct[random.randint(0, len(blockConstruct)-1)])
+        # Have a chance to give a rotated construct of the matrix
+        roll = random.randint(0, 360)
+        rollCount = roll // 90
+
+        # Rotates as many times randomly yippee o i i a
+        while (rollCount > 0):
+            construct = list(zip(*construct[::-1]))
+            rollCount -= 1
+
+        return block.Block(construct)
     
     def refillPlayerBlocks(self):
         emptyBlocks = True
@@ -206,7 +242,7 @@ class Board:
                 if (self.playerBlocks[i] != -1):
                     numberOfBlocks = len(self.playerBlocks)
                     xx = self.x + ((((self.width - self.x) / numberOfBlocks) * i) + (((self.width - self.x) / numberOfBlocks) / 2)) - (self.playerBlocks[i].width / 2)
-                    yy = self.y + (self.height + 92) - (self.playerBlocks[i].height / 2)
+                    yy = self.y + (self.height) - (self.playerBlocks[i].height / 2)
 
                     self.playerBlocks[i].setPosition(xx, yy)
 
