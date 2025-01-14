@@ -1,6 +1,7 @@
 import pygame
 import block
 import random
+import copy
 
 class Board:
     def __init__(self, x, y, rows, columns, screen, game, slotSize = 64):
@@ -87,52 +88,58 @@ class Board:
                 block.draw(self.screen, self)
 
     def refreshBoard(self):
+        if (self.dragBlock != None):
+            self.dragBlock.hoverRow = None
+            self.dragBlock.hoverColumn = None
         for i in range(len(self.board)):
             for j in range(len(self.board[i])):
                 if (self.board[i][j] == 0):
                     self.setSlotValue(i, j, -1)
 
-    def deployBlock(self, block, board = None, value = None, target = None):
+    def deployBlock(self, block, row, column, board = None, value = None):
         if (board == None):
             board = self.board
-        if (target == None):
-            target = 0
         if (value == None):
             value = block.value
-
-        deployed = False
-        for i in range(len(board)):
-            for j in range(len(board[i])):
-                if (board[i][j] == target):
-                    self.setSlotValue(i, j, value)
-                    deployed = True
         
-        if (deployed):
+        if (self.checkBlockPlacement(row, column, block.dimension, board) == True):
+            # Change the values of the board to the dragged block
+            blockHeight, blockWidth = len(block.dimension), len(block.dimension[0])
+            for i in range(row, row + blockHeight):
+                for j in range(column, column + blockWidth):
+                    if (block.dimension[i - row][j - column] != -1):
+                        #if (board[i][j] == -1):
+                        board[i][j] = value
+            # Check whether a line in a board is filled after changing the values of the board based on the dragged block
             self.checkBlast(board)
+        if (board == self.board):
             self.playerBlocks[self.dragBlockIndex] = None
+        self.checkBoardLose()
 
-            # Check the board if it wins
-            if (board == self.board):
-                emptyBlocks = True
-                for block in self.playerBlocks:
-                    if (block != None):
-                        emptyBlocks = False
+    def checkBoardLose(self):
+        board = self.board
+        # Check the board if it loses
+        emptyBlocks = True
+        for block in self.playerBlocks:
+            if (block != None):
+                emptyBlocks = False
 
-                if (emptyBlocks == False):
-                    gameEnd = True
-                    for block in self.playerBlocks:
-                        if (block != None):
-                            blockHeight, blockWidth = len(block.dimension), len(block.dimension[0])
-                            # Check if the block can fit anywhere on the board
-                            for i in range(len(self.board) - blockHeight + 1):
-                                for j in range(len(self.board[i]) - blockWidth + 1):
-                                    if (self.checkBlockPlacement(i, j, block.dimension, board)):
-                                        gameEnd = False
-                                    if (gameEnd == False):
-                                        break
-                                if (gameEnd == False):
-                                    break
-                    self.game.end = gameEnd
+        # If there is a block remaining, check whether it can be place on the board
+        if (emptyBlocks == False):
+            gameEnd = True
+            for block in self.playerBlocks:
+                if (block != None):
+                    blockHeight, blockWidth = len(block.dimension), len(block.dimension[0])
+                    # Check if the remaining block can fit anywhere on the board
+                    for i in range(len(self.board) - blockHeight + 1):
+                        for j in range(len(self.board[i]) - blockWidth + 1):
+                            if (self.checkBlockPlacement(i, j, block.dimension, board)):
+                                gameEnd = False
+                            if (gameEnd == False):
+                                break
+                        if (gameEnd == False):
+                            break
+            self.game.end = gameEnd
 
     # checks if a position is inside the board
     def checkBoardCollision(self, targetX, targetY):
@@ -161,6 +168,9 @@ class Board:
                                 for l in range(len(self.board[k])):
                                     # Check if the position is within the heldBlock's area
                                     if (i <= k < i + block_height) and (j <= l < j + block_width):
+                                        self.dragBlock.hoverRow = i
+                                        self.dragBlock.hoverColumn = j
+
                                         # Update only if the corresponding heldBlock value is not -1
                                         if heldBlock[k - i][l - j] != -1:
                                             if self.board[k][l] == -1:
@@ -219,13 +229,17 @@ class Board:
                 break
         return canPlaceBlock
 
+    def removeBlock(self, array, index):
+        # Remove the deployed block
+        array[index] = None
+
     # Remove an entire Row
     def blastRow(self, row, board = None):
         if (board == None):
             board = self.board
 
         for i in range(len(board[row])):
-            self.setSlotValue(row, i, -1)
+            self.setSlotValue(row, i, -1, board)
 
     # Remove an entire Column
     def blastColumn(self, column, board = None):
@@ -233,7 +247,7 @@ class Board:
             board = self.board
 
         for i in range(len(board)):
-            self.setSlotValue(i, column, -1)
+            self.setSlotValue(i, column, -1, board)
 
     # Returns a block class with a random construct
     def generateBlocks(self):
@@ -284,7 +298,7 @@ class Board:
         
         if (emptyBlocks):
             # Add blocks
-            transposedBoard = self.board
+            transposedBoard = copy.deepcopy(self.board)
             for i in range(len(self.playerBlocks)):
                 # Generate Blocks for the player
                 while self.playerBlocks[i] is None:
@@ -297,7 +311,7 @@ class Board:
                         for k in range(len(self.board[j]) - blockWidth + 1):
                             if self.checkBlockPlacement(j, k, generatedBlock.dimension, transposedBoard):
                                 generateNew = False  # Found a valid placement
-                                self.deployBlock(generatedBlock, transposedBoard)
+                                self.deployBlock(generatedBlock, j, k, transposedBoard)
                                 break
                         if not generateNew:
                             break
@@ -320,9 +334,12 @@ class Board:
                     self.playerBlocks[i].setPosition(xx, yy)
 
     # Sets the value of a slot in the board
-    def setSlotValue(self, row, column, value):
-        if (row < len(self.board) and column < len(self.board[row])):
-            self.board[row][column] = value
+    def setSlotValue(self, row, column, value, board = None):
+        if (board == None):
+            board = self.board
+
+        if (row < len(board) and column < len(board[row])):
+            board[row][column] = value
 
     def print(self):
         for i in self.board:

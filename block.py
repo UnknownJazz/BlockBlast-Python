@@ -12,6 +12,8 @@ class Block:
         self.y = y
         self.dragX = self.x
         self.dragY = self.y
+        self.hoverRow = None
+        self.hoverColumn = None
         self.margin = margin
         self.size = 18
         self.dragSize = self.size
@@ -53,9 +55,10 @@ class Block:
         if (mouse.get_pressed()[0]):
             self.dragX = mouse.get_pos()[0] - ((width)/2)
             self.dragY = mouse.get_pos()[1] - (height + 32)
-            
+
         else:
-            board.deployBlock(self)
+            if (self.hoverRow != None and self.hoverColumn != None):
+                board.deployBlock(self, self.hoverRow, self.hoverColumn)
             board.dragBlock = None
             board.dragBlockIndex = None
             board.refreshBoard()
@@ -63,5 +66,7 @@ class Block:
             self.state = 0
             self.dragX = self.x
             self.dragY = self.y
+            self.hoverRow = None
+            self.hoverColumn = None
 
 
