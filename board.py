@@ -4,6 +4,7 @@ import random
 
 class Board:
     def __init__(self, x, y, rows, columns, screen, game, slotSize = 64):
+        self.game = game
         self.board = [[-1 for i in range(rows)] for j in range(columns)]
         self.slotSize = slotSize
         self.rows = rows
@@ -109,6 +110,29 @@ class Board:
         if (deployed):
             self.checkBlast(board)
             self.playerBlocks[self.dragBlockIndex] = None
+
+            # Check the board if it wins
+            if (board == self.board):
+                emptyBlocks = True
+                for block in self.playerBlocks:
+                    if (block != None):
+                        emptyBlocks = False
+
+                if (emptyBlocks == False):
+                    gameEnd = True
+                    for block in self.playerBlocks:
+                        if (block != None):
+                            blockHeight, blockWidth = len(block.dimension), len(block.dimension[0])
+                            # Check if the block can fit anywhere on the board
+                            for i in range(len(self.board) - blockHeight + 1):
+                                for j in range(len(self.board[i]) - blockWidth + 1):
+                                    if (self.checkBlockPlacement(i, j, block.dimension, board)):
+                                        gameEnd = False
+                                    if (gameEnd == False):
+                                        break
+                                if (gameEnd == False):
+                                    break
+                    self.game.end = gameEnd
 
     # checks if a position is inside the board
     def checkBoardCollision(self, targetX, targetY):

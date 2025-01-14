@@ -5,40 +5,52 @@ class Game:
         self.windowWidth = windowWidth
         self.windowHeight = windowHeight
 
-        # pygame setup
-        pygame.init()
-        self.screen = pygame.display.set_mode((windowWidth, windowHeight))
-        self.clock = pygame.time.Clock()
         self.running = running
-
-        # instanciate the board
-        boardSize = 8
-        boardSlotSize = 48
-
-        boardX = (self.windowWidth / 2) - (((boardSlotSize+2) * boardSize) / 2)
-        boardY = 64
-        self.board = board.Board(boardX, boardY, boardSize, boardSize, self.screen, self, boardSlotSize)
-
-        # create the blocks below the board
 
 
     def run(self):
         while self.running:
-            # poll for events
-            # pygame.QUIT event means the user clicked X to close your window
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
+            self.end = False
+            # pygame setup
+            pygame.init()
+            self.screen = pygame.display.set_mode((self.windowWidth, self.windowHeight))
+            self.clock = pygame.time.Clock()
             
-            self.update()
-            self.draw()
+            # instanciate the board
+            boardSize = 8
+            boardSlotSize = 48
 
-            # flip() the display to put your work on screen
-            pygame.display.flip()
+            boardX = (self.windowWidth / 2) - (((boardSlotSize+2) * boardSize) / 2)
+            boardY = 64
+            self.board = board.Board(boardX, boardY, boardSize, boardSize, self.screen, self, boardSlotSize)
 
-            self.clock.tick(60)  # limits FPS to 60
+            # Main game loop
+            while (True):
+                # poll for events
+                # pygame.QUIT event means the user clicked X to close your window
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        self.running = False
+                        pygame.quit()
 
-        pygame.quit()
+                self.draw()
+                self.update()
+                
+                if (self.end == True):
+                    # If the state of the game is end, display Game End or something
+                    noBlocksText = pygame.font.SysFont("Arial", 100).render("Game End", True, "white")
+                    self.screen.blit(noBlocksText,((self.windowWidth//2) - (noBlocksText.get_width()//2), (self.windowHeight//2) - (noBlocksText.get_height())))
+                    restartText = pygame.font.SysFont("Arial", 50).render("Press [R] to restart :)", True, "white")
+                    self.screen.blit(restartText,((self.windowWidth//2) - (restartText.get_width()//2), (self.windowHeight//2) - (restartText.get_height()) + noBlocksText.get_height()))
+                    
+                    # Restart the game
+                    if (pygame.key.get_pressed()[pygame.K_r]):
+                        break
+
+                # flip() the display to put your work on screen
+                pygame.display.flip()
+
+                self.clock.tick(60)  # limits FPS to 60
 
     def update(self):
         self.board.update()
