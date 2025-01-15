@@ -271,7 +271,7 @@ class Board:
     def generateBlocks(self):
         # The structure of the array is like this:
         # [[3x3's], [3x2's], [2x2's], [2x1's and 1x1]]
-        blockConstructs = [[ # 3 x 3
+        blockConstructs = [[ # 3 x 3 and 5 x 1
                             [[1, 1, 1],
                              [1, 1, 1],
                              [1, 1, 1]],
@@ -282,9 +282,11 @@ class Board:
 
                             [[0, 0, 1],
                              [0, 0, 1],
-                             [1, 1, 1]]],
+                             [1, 1, 1]],
+                             
+                            [[1, 1, 1, 1, 1]]],
                             
-                            # 3 x 2
+                            # 3 x 2 and 4 x 1
                            [[[1, 1, 1],
                              [1, 1, 1]],
 
@@ -295,7 +297,9 @@ class Board:
                              [0, 1, 0]],
 
                             [[1, 1, 1],
-                             [1, 0, 0]],],
+                             [1, 0, 0]],
+                             
+                            [[1, 1, 1]]],
 
                             # 2 x 2
                            [[[1, 1],
