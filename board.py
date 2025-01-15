@@ -102,18 +102,24 @@ class Board:
         if (value == None):
             value = block.value
         
+        blockPlaced = 0 # Track how many blocks were traced for scoring
+
         if (self.checkBlockPlacement(row, column, block.dimension, board) == True):
             # Change the values of the board to the dragged block
             blockHeight, blockWidth = len(block.dimension), len(block.dimension[0])
             for i in range(row, row + blockHeight):
                 for j in range(column, column + blockWidth):
                     if (block.dimension[i - row][j - column] != -1):
-                        #if (board[i][j] == -1):
                         board[i][j] = value
+                        blockPlaced += 1
+            
             # Check whether a line in a board is filled after changing the values of the board based on the dragged block
-            self.checkBlast(board)
+            linesCleared = self.checkLineClear(board)
+        
         if (board == self.board):
-            self.playerBlocks[self.dragBlockIndex] = None
+            self.playerBlocks[self.dragBlockIndex] = None # Remove the deployed block
+            self.game.addScore(blockPlaced, linesCleared) # Update the score on each deployed blocks
+
         self.checkBoardLose()
 
     def checkBoardLose(self):
@@ -187,7 +193,9 @@ class Board:
                         self.refreshBoard()
 
     # Blast is when an entire row or column is filled, then boom shaka laka
-    def checkBlast(self, board = None):
+    def checkLineClear(self, board = None):
+        linesCleared = 0 # Track how many lines were cleared for scoring
+
         filledLines = [[],[]]
         if (board == None):
             board = self.board
@@ -200,6 +208,7 @@ class Board:
                     break
             if (filled == True):
                 filledLines[0].append(i)
+                linesCleared += 1
         
         # Check Vertical lines
         for i in range(len(board)):
@@ -210,12 +219,14 @@ class Board:
                     break
             if (filled == True):
                 filledLines[1].append(i)
+                linesCleared += 1
         
         # Remove all the lines that is filled vertically and horizontally, yeaah!
         for i in filledLines[0]:
-            self.blastRow(i, board)
+            self.clearRow(i, board)
         for i in filledLines[1]:
-            self.blastColumn(i, board)
+            self.clearColumn(i, board)
+        return linesCleared
 
     def checkBlockPlacement(self, row, column, blockDimension, board = None):
         if (board == None):
@@ -241,7 +252,7 @@ class Board:
         array[index] = None
 
     # Remove an entire Row
-    def blastRow(self, row, board = None):
+    def clearRow(self, row, board = None):
         if (board == None):
             board = self.board
 
@@ -249,7 +260,7 @@ class Board:
             self.setSlotValue(row, i, -1, board)
 
     # Remove an entire Column
-    def blastColumn(self, column, board = None):
+    def clearColumn(self, column, board = None):
         if (board == None):
             board = self.board
 
