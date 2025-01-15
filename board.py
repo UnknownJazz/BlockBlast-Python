@@ -269,29 +269,74 @@ class Board:
 
     # Returns a block class with a random construct
     def generateBlocks(self):
-        blockConstruct = {
-            0: [[1]],  # Single block
-            1: [[1, 1]],  # Horizontal line (2)
-            2: [[1], [1]],  # Vertical line (2)
-            3: [[1, 1, 1]],  # Horizontal line (3)
-            4: [[1], [1], [1]],  # Vertical line (3)
-            5: [[1, 1, 1, 1]],  # Horizontal line (4)
-            6: [[1], [1], [1], [1]],  # Vertical line (4)
-            7: [[1, 1], [1, 1]],  # Square (2x2)
-            8: [[1, 1, -1], [-1, 1, 1]],  # Z-shape
-            9: [[-1, 1, 1], [1, 1, -1]],  # S-shape
-            10: [[1, -1], [1, 1], [-1, 1]],  # T-shape (2x2)
-            11: [[1, 1, 1], [-1, 1, -1]],  # T-shape
-            12: [[1, 1, -1], [1, 1, 1]],  # L-shape (rotated variant)
-            13: [[-1, 1], [-1, 1], [1, 1]],  # L-shape (2x2)
-            14: [[1, -1], [1, -1], [1, 1]],  # Reverse L-shape (longer variant)
-            15: [[1, 1, 1], [1, -1, -1]],  # L-shape (2x3 matrix variant)
-            16: [[-1, -1, 1], [1, 1, 1]],  # Reverse L-shape (2x3 variant)
-            17: [[1, 1, 1], [1, 1, 1], [1, 1, 1]], # Square (3x3)
-            18: [[1, 1, 1], [-1, -1, 1], [-1, -1, 1]], # L-shape (3x3)
-            19: [[-1, 1], [1, -1]],
-        }
-        construct = blockConstruct[random.randint(0, len(blockConstruct)-1)]
+        # The structure of the array is like this:
+        # [[3x3's], [3x2's], [2x2's], [2x1's and 1x1]]
+        blockConstructs = [[ # 3 x 3
+                            [[1, 1, 1],
+                             [1, 1, 1],
+                             [1, 1, 1]],
+                            
+                            [[1, 0, 0],
+                             [1, 0, 0],
+                             [1, 1, 1]],
+
+                            [[0, 0, 1],
+                             [0, 0, 1],
+                             [1, 1, 1]]],
+                            
+                            # 3 x 2
+                           [[[1, 1, 1],
+                             [1, 1, 1]],
+
+                            [[1, 1, 1],
+                             [0, 0, 1]],
+                            
+                            [[1, 1, 1],
+                             [0, 1, 0]],
+
+                            [[1, 1, 1],
+                             [1, 0, 0]],],
+
+                            # 2 x 2
+                           [[[1, 1],
+                             [1, 1]],
+
+                            [[1, 1],
+                             [0, 1]],
+
+                            [[1, 0],
+                             [0, 1]],
+                            ],
+
+                            # 2 x 2 and 1 x 1
+                           [[[1, 1]], [[1]]]]
+
+        # Choose random construct based on weights
+        constructWeights = [100, 50, 25, 10]
+        r = random.randint(0, sum(constructWeights)) # Choose a random point in the weights
+        print(f"random value: {r}")
+
+        cursor = 0
+        randomSize = 0
+        for i in range(len(constructWeights)):
+            cursor += constructWeights[i]
+            if (cursor >= r):
+                randomSize = i
+                print(f"size: {i}")
+                break
+
+        randomBlock = random.randint(0, len(blockConstructs[randomSize]) - 1)
+        construct = blockConstructs[randomSize][randomBlock]
+
+        # Change the matrix's 0's to -1's
+        for i in range(len(construct)):
+            for j in range(len(construct[i])):
+                if (construct[i][j] == 0):
+                    construct[i][j] = -1
+
+        value = random.randint(1, len(self.colorValue)-2)
+        blockGenerated = block.Block(construct, value)
+        #construct = blockConstruct[random.randint(0, len(blockConstruct)-1)]
 
         # Have a chance to give a rotated construct of the matrix
         roll = random.randint(0, 360)
@@ -299,13 +344,11 @@ class Board:
 
         # Rotates as many times randomly yippee o i i a
         while (rollCount > 0):
-            construct = list(zip(*construct[::-1]))
+            blockGenerated.rotate()
             rollCount -= 1
 
-        value = random.randint(1, len(self.colorValue)-2)
+        return blockGenerated
 
-        return block.Block(construct, value)
-    
     # Refills the player blocks with a set of new block
     def refillPlayerBlocks(self):
         # Player must use all three blocks first before generating new ones
@@ -340,6 +383,7 @@ class Board:
                     else:
                         # If no valid placement exists, generate a new block
                         continue
+            random.shuffle(self.playerBlocks)
 
 
             # Set the position of the blocks below the board

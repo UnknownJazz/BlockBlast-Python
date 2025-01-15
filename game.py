@@ -82,6 +82,5 @@ class Game:
                 self.comboFailCount = 0
                 self.comboCount = 0
 
-        print(f"combo Count: {self.comboCount} combo Fail: {self.comboFailCount}")
         # Update the score
         self.score += blocksPlaced + ((linesCleared * 10) * (1 + self.comboCount))

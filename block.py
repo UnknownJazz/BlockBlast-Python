@@ -69,4 +69,11 @@ class Block:
             self.hoverRow = None
             self.hoverColumn = None
 
+    def rotate(self):
+        # Rotates the dimension of the block clockwise
+        self.dimension = list(zip(*self.dimension[::-1]))
 
+        # Swap the values of the width and height
+        placeholder = self.width
+        self.width = self.height
+        self.height = placeholder
