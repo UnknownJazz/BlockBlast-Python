@@ -44,7 +44,6 @@ class Board:
     def update(self):
         if (self.dragBlock != None):
             self.checkBoardCollision(self.dragBlock.dragX + (self.slotSize/2), self.dragBlock.dragY + (self.slotSize/2))
-
         # Allow the player to drag the blocks to the board
         for i in range(len(self.playerBlocks)):
             currentBlock = self.playerBlocks[i]
@@ -188,27 +187,34 @@ class Board:
 
     # Blast is when an entire row or column is filled, then boom shaka laka
     def checkBlast(self, board = None):
+        filledLines = [[],[]]
         if (board == None):
             board = self.board
         # Check Horizontal lines
         for i in range(len(board)):
-            flag = False
+            filled = True
             for j in range(len(board[i])):
                 if (board[i][j] < 1):
-                    flag = True
+                    filled = False
                     break
-            if (flag == False):
-                self.blastRow(i, board)
+            if (filled == True):
+                filledLines[0].append(i)
         
         # Check Vertical lines
         for i in range(len(board)):
-            flag = False
+            filled = True
             for j in range(len(board[i])):
                 if (board[j][i] < 1):
-                    flag = True
+                    filled = False
                     break
-            if (flag == False):
-                self.blastColumn(i, board)
+            if (filled == True):
+                filledLines[1].append(i)
+        
+        # Remove all the lines that is filled vertically and horizontally, yeaah!
+        for i in filledLines[0]:
+            self.blastRow(i, board)
+        for i in filledLines[1]:
+            self.blastColumn(i, board)
 
     def checkBlockPlacement(self, row, column, blockDimension, board = None):
         if (board == None):
