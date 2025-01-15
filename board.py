@@ -2,6 +2,7 @@ import pygame
 import block
 import random
 import copy
+import imageGenerator as iG
 
 class Board:
     def __init__(self, x, y, rows, columns, screen, game, slotSize = 64):
