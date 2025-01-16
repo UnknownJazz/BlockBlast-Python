@@ -47,7 +47,10 @@ class Block:
             for j in range(len(self.dimension[i])):
                 xx = self.dragX + ((self.dragSize + self.margin) * j)
                 if ((i in highlights[0] or j in highlights[1]) and self.dimension[i][j] != -1):
-                    pygame.draw.rect(screen, "white", (xx, yy, self.dragSize, self.dragSize))
+                    # pygame.draw.rect(screen, "white", (xx, yy, self.dragSize, self.dragSize))
+                    hoverImage = pygame.transform.scale(board.colorValue[-2], (self.dragSize, self.dragSize))
+                    screen.blit(hoverImage, (xx, yy))
+                    pass
                 else:
                     if (self.dimension[i][j] != -1):
                         screen.blit(cellImage, (xx, yy))

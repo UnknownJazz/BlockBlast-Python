@@ -21,8 +21,9 @@ class Board:
         self.timer = 200
 
         self.colorValue = {
+            -2 : pygame.image.load('assets\Block Cell White.png'),
             -1 : pygame.Color(33, 44, 82),
-            0 : "gray",
+            0 : pygame.image.load('assets\Block Cell Gray.png'),
             1 : pygame.image.load('assets\Block Cell1.png'),
             2 : pygame.image.load('assets\Block Cell2.png'),
             3 : pygame.image.load('assets\Block Cell3.png'),
@@ -82,7 +83,7 @@ class Board:
                 # 0 = Hover
                 # > 0 = Naay sulod
 
-                if (self.board[i][j] < 1): # If the cell if empty or highlighted by a hovered block
+                if (self.board[i][j] == -1): # If the cell if empty or highlighted by a hovered block
                     pygame.draw.rect(screen, (self.colorValue[self.board[i][j]]), (xx, yy, self.slotSize, self.slotSize))
                 else: # Draw an image of a block if the cell is not empty to it's corresponding value
                     cellImage = self.colorValue[self.board[i][j]]
@@ -90,7 +91,10 @@ class Board:
                     self.screen.blit(cellImage, (xx, yy))
                 
                 if ((i in filledLines[0] or j in filledLines[1]) and (self.board[i][j] != 0)):
-                    pygame.draw.rect(screen, "white", (xx, yy, self.slotSize, self.slotSize))
+                    # pygame.draw.rect(screen, "white", (xx, yy, self.slotSize, self.slotSize))
+                    cellImage = self.colorValue[-2]
+                    cellImage = pygame.transform.scale(cellImage, (self.slotSize, self.slotSize))
+                    self.screen.blit(cellImage, (xx, yy))
                 
         # Draw each available blocks at the bottom of the board
         for block in self.playerBlocks:
@@ -367,7 +371,7 @@ class Board:
                 if (construct[i][j] == 0):
                     construct[i][j] = -1
 
-        value = random.randint(1, len(self.colorValue)-2)
+        value = random.randint(1, len(self.colorValue)-3)
         blockGenerated = block.Block(construct, value)
         #construct = blockConstruct[random.randint(0, len(blockConstruct)-1)]
 
