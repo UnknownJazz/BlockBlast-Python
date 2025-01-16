@@ -38,6 +38,7 @@ class Game:
                     if event.type == pygame.QUIT:
                         self.running = False
                         pygame.quit()
+                        break
                 
                 self.update()
                 self.draw()

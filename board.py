@@ -89,10 +89,9 @@ class Board:
                     cellImage = pygame.transform.scale(cellImage, (self.slotSize, self.slotSize))
                     self.screen.blit(cellImage, (xx, yy))
                 
-                if (i in filledLines[0] or j in filledLines[1]):
+                if ((i in filledLines[0] or j in filledLines[1]) and (self.board[i][j] != 0)):
                     pygame.draw.rect(screen, "white", (xx, yy, self.slotSize, self.slotSize))
                 
-        
         # Draw each available blocks at the bottom of the board
         for block in self.playerBlocks:
             if (block != None):
