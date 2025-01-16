@@ -38,9 +38,10 @@ class Game:
                     if event.type == pygame.QUIT:
                         self.running = False
                         pygame.quit()
-
-                self.draw()
+                
                 self.update()
+                self.draw()
+                
                 
                 if (self.end == True):
                     # If the state of the game is end, display Game End or something

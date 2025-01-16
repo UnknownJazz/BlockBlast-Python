@@ -3,6 +3,7 @@ import block
 import random
 import copy
 import imageGenerator as iG
+import time
 
 class Board:
     def __init__(self, x, y, rows, columns, screen, game, slotSize = 64):
@@ -17,6 +18,7 @@ class Board:
         self.margin = 2
         self.width = self.x + ((self.slotSize + self.margin) * self.columns)
         self.height = self.y + ((self.slotSize + self.margin) * self.rows)
+        self.timer = 200
 
         self.colorValue = {
             -1 : pygame.Color(33, 44, 82),
@@ -43,6 +45,8 @@ class Board:
 
     # Update the board state each tick
     def update(self):
+        self.timer = max(0, self.timer - 1)
+
         if (self.dragBlock != None):
             self.checkBoardCollision(self.dragBlock.dragX + (self.slotSize/2), self.dragBlock.dragY + (self.slotSize/2))
         # Allow the player to drag the blocks to the board
@@ -66,6 +70,9 @@ class Board:
         # Draw a dark background around the board
         pygame.draw.rect(screen, pygame.Color(23, 29, 77), (self.x - self.margin, self.y - self.margin, (self.width - self.x) + self.margin, (self.height - self.y) + self.margin))
 
+        # Check an entire row or column if it can be cleared with a hovered block
+        filledLines = self.checkLineClear(self.board, True)
+
         # Draw each slot of the board
         for i in range(len(self.board)): # Row
             yy = self.y + ((self.slotSize + self.margin) * i)
@@ -74,18 +81,29 @@ class Board:
                 # -1 = Empty
                 # 0 = Hover
                 # > 0 = Naay sulod
-                
-                if (self.board[i][j] < 1):
+
+                if (self.board[i][j] < 1): # If the cell if empty or highlighted by a hovered block
                     pygame.draw.rect(screen, (self.colorValue[self.board[i][j]]), (xx, yy, self.slotSize, self.slotSize))
-                else:
+                else: # Draw an image of a block if the cell is not empty to it's corresponding value
                     cellImage = self.colorValue[self.board[i][j]]
                     cellImage = pygame.transform.scale(cellImage, (self.slotSize, self.slotSize))
                     self.screen.blit(cellImage, (xx, yy))
+                
+                if (i in filledLines[0] or j in filledLines[1]):
+                    pygame.draw.rect(screen, "white", (xx, yy, self.slotSize, self.slotSize))
+                
         
         # Draw each available blocks at the bottom of the board
         for block in self.playerBlocks:
             if (block != None):
-                block.draw(self.screen, self)
+                if (block.state == 1):
+                    block.draw(self.screen, self, filledLines)
+                else:
+                    block.draw(self.screen, self)
+        
+        if (self.timer <= 0):
+            print(filledLines)
+            self.timer = 200
 
     def refreshBoard(self):
         if (self.dragBlock != None):
@@ -155,9 +173,9 @@ class Board:
             self.refreshBoard()
     
     def checkSlotCollision(self, targetX, targetY): # checks if the mouse is hovering a slot
-        for i in range(len(self.board)): # Row
+        for i in range(len(self.board)): # Row of the board
             yy = self.y + ((self.slotSize + self.margin) * i)
-            for j in range(len(self.board[i])): # Column
+            for j in range(len(self.board[i])): # Column of the board
                 xx = self.x + ((self.slotSize + self.margin) * j)
 
                 # Check for horizontal and vertical collision
@@ -168,9 +186,10 @@ class Board:
 
                     # Proceed with updating the board only if no collision with values > 0
                     if (self.checkBlockPlacement(i, j, self.dragBlock.dimension)):
+
                         # First, update the board with the heldBlock values
                         if (i + block_height <= len(self.board) and j + block_width <= len(self.board[i])):
-                            for k in range(len(self.board)):
+                            for k in range(len(self.board)): # 
                                 for l in range(len(self.board[k])):
                                     # Check if the position is within the heldBlock's area
                                     if (i <= k < i + block_height) and (j <= l < j + block_width):
@@ -183,6 +202,7 @@ class Board:
                                                 self.setSlotValue(k, l, 0)
                                         elif (self.board[k][l] == 0):
                                             self.setSlotValue(k, l, -1)
+                                        
                                     else:
                                         # Set all other positions to -1
                                         if (self.board[k][l] == 0):
@@ -193,7 +213,7 @@ class Board:
                         self.refreshBoard()
 
     # Blast is when an entire row or column is filled, then boom shaka laka
-    def checkLineClear(self, board = None):
+    def checkLineClear(self, board = None, hover = False):
         linesCleared = 0 # Track how many lines were cleared for scoring
 
         filledLines = [[],[]]
@@ -203,9 +223,14 @@ class Board:
         for i in range(len(board)):
             filled = True
             for j in range(len(board[i])):
-                if (board[i][j] < 1):
-                    filled = False
-                    break
+                if (hover == True):
+                    if (board[i][j] == -1):
+                        filled = False
+                        break
+                else:
+                    if (board[i][j] < 1):
+                        filled = False
+                        break
             if (filled == True):
                 filledLines[0].append(i)
                 linesCleared += 1
@@ -214,19 +239,26 @@ class Board:
         for i in range(len(board)):
             filled = True
             for j in range(len(board[i])):
-                if (board[j][i] < 1):
-                    filled = False
-                    break
+                if (hover == True):
+                    if (board[j][i] == -1):
+                        filled = False
+                        break
+                else:
+                    if (board[j][i] < 1):
+                        filled = False
+                        break
             if (filled == True):
                 filledLines[1].append(i)
                 linesCleared += 1
-        
-        # Remove all the lines that is filled vertically and horizontally, yeaah!
-        for i in filledLines[0]:
-            self.clearRow(i, board)
-        for i in filledLines[1]:
-            self.clearColumn(i, board)
-        return linesCleared
+
+        if (hover == False):
+            # Remove all the lines that is filled vertically and horizontally, yeaah!
+            for i in filledLines[0]:
+                self.clearRow(i, board)
+            for i in filledLines[1]:
+                self.clearColumn(i, board)
+            return linesCleared
+        return filledLines
 
     def checkBlockPlacement(self, row, column, blockDimension, board = None):
         if (board == None):
@@ -318,7 +350,6 @@ class Board:
         # Choose random construct based on weights
         constructWeights = [100, 50, 25, 10]
         r = random.randint(0, sum(constructWeights)) # Choose a random point in the weights
-        print(f"random value: {r}")
 
         cursor = 0
         randomSize = 0
@@ -326,7 +357,6 @@ class Board:
             cursor += constructWeights[i]
             if (cursor >= r):
                 randomSize = i
-                print(f"size: {i}")
                 break
 
         randomBlock = random.randint(0, len(blockConstructs[randomSize]) - 1)

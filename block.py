@@ -22,24 +22,35 @@ class Block:
         self.height = ((len(self.dimension)) * self.size) + ((len(self.dimension)) * self.margin)
 
         
-    def draw(self, screen, board):
+    def draw(self, screen, board, highlights = [[], []]):# Highlights = [Rows], [Columns]
         if (self.state == 1):
             self.drag(board)
             self.dragSize = board.slotSize
         else:
             self.dragSize = self.size
+        
+        if (highlights[0] != [] and self.hoverRow != None):
+            for row in range(len(highlights[0])):
+                highlights[0][row] -= self.hoverRow
+
+        if (highlights[1] != [] and self.hoverColumn != None):
+            for col in range(len(highlights[1])):
+                highlights[1][col] -= self.hoverColumn
 
         cellImage = board.colorValue[self.value]
         cellImage = pygame.transform.scale(cellImage, (self.dragSize, self.dragSize))
         pygame.draw.rect(screen, "white", (self.x - self.margin, self.y - self.margin, self.width + self.margin, self.height + self.margin))
-        
+
+        # Draw each cells of a block
         for i in range(len(self.dimension)):
             yy = self.dragY + ((self.dragSize + self.margin) * i)
             for j in range(len(self.dimension[i])):
                 xx = self.dragX + ((self.dragSize + self.margin) * j)
-
-                if (self.dimension[i][j] != -1):
-                    screen.blit(cellImage, (xx, yy))
+                if ((i in highlights[0] or j in highlights[1]) and self.dimension[i][j] != -1):
+                    pygame.draw.rect(screen, "white", (xx, yy, self.dragSize, self.dragSize))
+                else:
+                    if (self.dimension[i][j] != -1):
+                        screen.blit(cellImage, (xx, yy))
 
     def setPosition(self, x, y):
         self.x = x
