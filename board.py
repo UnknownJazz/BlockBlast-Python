@@ -105,7 +105,11 @@ class Board:
                     block.draw(self.screen, self)
         
         if (self.timer <= 0):
-            print(filledLines)
+            grid = copy.deepcopy(self.board)
+            for row in grid:
+                row = [x+1 for x in row]
+                print(row)
+            print("\n\n")
             self.timer = 200
 
     def refreshBoard(self):
@@ -137,7 +141,7 @@ class Board:
             # Check whether a line in a board is filled after changing the values of the board based on the dragged block
             linesCleared = self.checkLineClear(board)
         
-        if (board == self.board):
+        if (board == self.board and self.dragBlockIndex != None):
             self.playerBlocks[self.dragBlockIndex] = None # Remove the deployed block
             self.game.addScore(blockPlaced, linesCleared) # Update the score on each deployed blocks
 

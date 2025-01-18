@@ -7,7 +7,6 @@ class Game:
 
         self.running = running
 
-
     def run(self):
         while self.running:
             self.end = False
@@ -29,6 +28,13 @@ class Game:
             self.comboFailCount = 0
             self.comboFailMax = 3
             self.comboCount = 0
+            # Create a text file to hold the high scores
+            scoreFile = open("Score.txt", "a")
+            scoreFile.close
+
+            file = open("Score.txt", "r")
+            self.highScore = file.readline()
+            file.close()
 
             # Main game loop
             while (True):
@@ -38,13 +44,13 @@ class Game:
                     if event.type == pygame.QUIT:
                         self.running = False
                         pygame.quit()
-                        break
                 
                 self.update()
                 self.draw()
                 
-                
                 if (self.end == True):
+                    self.saveScore() # Save the highest score
+
                     # If the state of the game is end, display Game End or something
                     noBlocksText = pygame.font.SysFont("Arial", 100).render("Game End", True, "white")
                     self.screen.blit(noBlocksText,((self.windowWidth//2) - (noBlocksText.get_width()//2), (self.windowHeight//2) - (noBlocksText.get_height())))
@@ -63,10 +69,22 @@ class Game:
     def update(self):
         self.board.update()
 
+        # End the game
+        if (pygame.key.get_pressed()[pygame.K_e]):
+            self.end  = True
+
     def draw(self):
         # fill the screen with a color to wipe away anything from last frame
         self.screen.fill(pygame.Color(66, 92, 161))
 
+        # Draw the highest score at the left side of the board
+        highScoreX = 32
+        highScoreY = self.board.y
+        highScoreText = pygame.font.SysFont("Arial", 25).render(f"Highscore:", True, "white")
+        self.screen.blit(highScoreText, (32, self.board.y))
+        highScoreDisplay = pygame.font.SysFont("Arial", 25).render(f"    {self.highScore}", True, "white")
+        self.screen.blit(highScoreDisplay, (32, self.board.y + (highScoreText.get_height() + 2))) # 2 is margin
+        
         # Draw the score above the board
         scoreText = pygame.font.SysFont("Arial", 50).render(f"{self.score}", True, "white" if (self.comboCount <= 1) else "yellow")
         self.screen.blit(scoreText,((self.windowWidth//2) - (scoreText.get_width()//2), (60) - (scoreText.get_height())))
@@ -86,3 +104,13 @@ class Game:
 
         # Update the score
         self.score += blocksPlaced + ((linesCleared * 10) * (1 + self.comboCount))
+    
+    def saveScore(self):
+        with open("Score.txt", "r+") as file:
+            savedScore = file.readline().strip()  # Read the first line and remove whitespace
+            savedScore = int(savedScore) if savedScore.isdigit() else 0  # Handle invalid or empty content
+            
+            if self.score > savedScore:
+                file.seek(0)  # Go to the start of the file
+                file.write(f"{self.score}")  # Write the new score
+                file.truncate()  # Ensure the file is not longer than necessary
