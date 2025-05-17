@@ -33,7 +33,7 @@ class ImageCreator:
                 square_color = color.get(value, "white")  # Default to white if value not in color dict
                 
                 # Draw the square
-                draw.rectangle([top_left, bottom_right], fill=square_color)
+                draw.rectangle([top_left, bottom_right], fill=square_color, outline="white")
 
         # Save the image
         img.save(f"{save_as}.png")
