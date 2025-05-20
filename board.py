@@ -415,11 +415,11 @@ class Board:
                         for k in range(len(self.board[j]) - blockWidth + 1):
                             if self.checkBlockPlacement(j, k, generatedBlock.dimension, transposedBoard):
                                 generateNew = False  # Found a valid placement
-                                blockScore.append([j, k, self.checkLineClear()])
-                                break
-                        if not generateNew:
-                            break
-                    
+                                tempBoard = copy.deepcopy(transposedBoard)
+
+                                blockScore.append([j, k, self.deployBlock(generatedBlock, j, k, tempBoard)])
+
+                    print(f"block no. {i}'s cell score {blockScore}")
                     # After nia mahuman ug check tanan
                     if not generateNew:
                         # Check which cell sa board have the most score
@@ -451,5 +451,9 @@ class Board:
 
         if (row < len(board) and column < len(board[row])):
             board[row][column] = value
+
+    def print(self):
+        for i in self.board:
+            print(i)
 
     
