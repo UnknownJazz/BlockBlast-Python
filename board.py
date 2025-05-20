@@ -104,13 +104,13 @@ class Board:
                 else:
                     block.draw(self.screen, self)
         
-        if (self.timer <= 0):
-            grid = copy.deepcopy(self.board)
-            for row in grid:
-                row = [x+1 for x in row]
-                print(row)
-            print("\n\n")
-            self.timer = 200
+        # if (self.timer <= 0):
+        #     grid = copy.deepcopy(self.board)
+        #     for row in grid:
+        #         row = [x+1 for x in row]
+        #         print(row)
+        #     print("\n\n")
+        #     self.timer = 200
 
     def refreshBoard(self):
         if (self.dragBlock != None):
@@ -400,30 +400,38 @@ class Board:
         
         if (emptyBlocks):
             # Add blocks
-            transposedBoard = copy.deepcopy(self.board)
+            transposedBoard = copy.deepcopy(self.board) # Create a copy of the current state of the board to check placements of the generated block:)
             for i in range(len(self.playerBlocks)):
                 # Generate Blocks for the player
                 while self.playerBlocks[i] is None:
-                    generatedBlock = self.generateBlocks()
+                    generatedBlock = self.generateBlocks() # Generate a new block
                     blockHeight, blockWidth = len(generatedBlock.dimension), len(generatedBlock.dimension[0])
                     generateNew = True
 
-                    # Check if the block can fit anywhere on the board
+
+                    # Check if the block can fit anywhere on the board, this is the function to check each cell one by one if the block fits
+                    blockScore = [] # Kani nga array holds the row and column coordinate, with a designated score sa kana nga specific cell
                     for j in range(len(self.board) - blockHeight + 1):
                         for k in range(len(self.board[j]) - blockWidth + 1):
                             if self.checkBlockPlacement(j, k, generatedBlock.dimension, transposedBoard):
                                 generateNew = False  # Found a valid placement
-                                self.deployBlock(generatedBlock, j, k, transposedBoard)
+                                blockScore.append([j, k, self.checkLineClear()])
                                 break
                         if not generateNew:
                             break
-
+                    
+                    # After nia mahuman ug check tanan
                     if not generateNew:
-                        # Assign the generated block since it fits
+                        # Check which cell sa board have the most score
+                        bestCell = blockScore[max(enumerate(blockScore), key=lambda x:x[1][2])[0]]
+                        self.deployBlock(generatedBlock, bestCell[0], bestCell[1], transposedBoard)
                         self.playerBlocks[i] = generatedBlock
                     else:
                         # If no valid placement exists, generate a new block
                         continue
+
+                    image = iG.ImageCreator()
+                    image.generateMatrix(250, 250, transposedBoard, f"Block {i}")
             random.shuffle(self.playerBlocks)
 
 
@@ -444,6 +452,4 @@ class Board:
         if (row < len(board) and column < len(board[row])):
             board[row][column] = value
 
-    def print(self):
-        for i in self.board:
-            print(i)
+    
