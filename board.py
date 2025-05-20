@@ -4,6 +4,7 @@ import random
 import copy
 import imageGenerator as iG
 import time
+import threading
 
 class Board:
     def __init__(self, x, y, rows, columns, screen, game, slotSize = 64):
@@ -146,6 +147,8 @@ class Board:
             self.game.addScore(blockPlaced, linesCleared) # Update the score on each deployed blocks
 
         self.checkBoardLose()
+
+        return linesCleared
 
     def checkBoardLose(self):
         board = self.board
@@ -393,45 +396,62 @@ class Board:
     # Refills the player blocks with a set of new block
     def refillPlayerBlocks(self):
         # Player must use all three blocks first before generating new ones
-        emptyBlocks = True
-        for block in self.playerBlocks:
-            if (block != None):
-                emptyBlocks = False
-        
-        if (emptyBlocks):
-            # Add blocks
-            transposedBoard = copy.deepcopy(self.board) # Create a copy of the current state of the board to check placements of the generated block:)
-            for i in range(len(self.playerBlocks)):
-                # Generate Blocks for the player
-                while self.playerBlocks[i] is None:
-                    generatedBlock = self.generateBlocks() # Generate a new block
-                    blockHeight, blockWidth = len(generatedBlock.dimension), len(generatedBlock.dimension[0])
-                    generateNew = True
+        emptyBlocks = all(block is None for block in self.playerBlocks)
 
+        if not emptyBlocks:
+            return
 
-                    # Check if the block can fit anywhere on the board, this is the function to check each cell one by one if the block fits
-                    blockScore = [] # Kani nga array holds the row and column coordinate, with a designated score sa kana nga specific cell
-                    for j in range(len(self.board) - blockHeight + 1):
-                        for k in range(len(self.board[j]) - blockWidth + 1):
-                            if self.checkBlockPlacement(j, k, generatedBlock.dimension, transposedBoard):
-                                generateNew = False  # Found a valid placement
-                                tempBoard = copy.deepcopy(transposedBoard)
+        transposedBoard = copy.deepcopy(self.board)
 
-                                blockScore.append([j, k, self.deployBlock(generatedBlock, j, k, tempBoard)])
+        def generateSingleBlock(i, results):
+            while True:
+                generatedBlock = self.generateBlocks()
+                blockHeight = len(generatedBlock.dimension)
+                blockWidth = len(generatedBlock.dimension[0])
+                blockScore = []
 
-                    print(f"block no. {i}'s cell score {blockScore}")
-                    # After nia mahuman ug check tanan
-                    if not generateNew:
-                        # Check which cell sa board have the most score
-                        bestCell = blockScore[max(enumerate(blockScore), key=lambda x:x[1][2])[0]]
-                        self.deployBlock(generatedBlock, bestCell[0], bestCell[1], transposedBoard)
-                        self.playerBlocks[i] = generatedBlock
-                    else:
-                        # If no valid placement exists, generate a new block
-                        continue
+                # Check all positions
+                for j in range(len(self.board) - blockHeight + 1):
+                    for k in range(len(self.board[j]) - blockWidth + 1):
+                        if self.checkBlockPlacement(j, k, generatedBlock.dimension, transposedBoard):
+                            tempBoard = copy.deepcopy(transposedBoard)
+                            score = self.deployBlock(generatedBlock, j, k, tempBoard)
+                            blockScore.append([j, k, score])
 
+                if blockScore:
+                    # Pick best scoring position
+                    bestCell = max(blockScore, key=lambda x: x[2])
+                    # Deploy block on the shared transposedBoard (thread-safety issue! We'll handle this after)
+                    self.deployBlock(generatedBlock, bestCell[0], bestCell[1], transposedBoard)
+                    results[i] = generatedBlock
+                    # Optionally generate image preview
                     image = iG.ImageCreator()
                     image.generateMatrix(250, 250, transposedBoard, f"Block {i}")
+                    break
+                # else continue generating
+
+        # Prepare a dict to store results from threads
+        results = [None] * len(self.playerBlocks)
+        threads = []
+
+        for i in range(len(self.playerBlocks)):
+            t = threading.Thread(target=generateSingleBlock, args=(i, results))
+            threads.append(t)
+            t.start()
+
+        for t in threads:
+            t.join()
+
+        self.playerBlocks = results
+        random.shuffle(self.playerBlocks)
+
+        # Set the position of the blocks below the board
+        numberOfBlocks = len(self.playerBlocks)
+        for i, block in enumerate(self.playerBlocks):
+            if block is not None:
+                xx = self.x + ((((self.width - self.x) / numberOfBlocks) * i) + (((self.width - self.x) / numberOfBlocks) / 2)) - (block.width / 2)
+                yy = self.y + (self.height) - (block.height / 2)
+                block.setPosition(xx, yy)
             random.shuffle(self.playerBlocks)
 
 
