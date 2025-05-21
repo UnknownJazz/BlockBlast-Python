@@ -1,17 +1,42 @@
+#game.py
+
+import threading
+import pygame.mixer
+import random
+
 import pygame
 import board
 class Game:
+    
+    def play_music(self):
+        pygame.mixer.init()
+        pygame.mixer.music.load("assets\Kirby_dream_land_theme_song.mp3")  # or "bg_music.wav"
+        pygame.mixer.music.play(-1)  # -1 means loop forever
+        pygame.mixer.music.set_volume(0.5)
+
     def __init__(self, windowWidth, windowHeight, running = True):
         self.windowWidth = windowWidth
         self.windowHeight = windowHeight
 
         self.running = running
+        
+        # Load blast sound effect once
+        pygame.mixer.init()
+        self.blast_sound = pygame.mixer.Sound("assets\Get out sound effect!!.mp3")
+        self.blast_sound.set_volume(2)  # 50% volume
+
 
     def run(self):
         while self.running:
             self.end = False
             # pygame setup
             pygame.init()
+            
+            # Start background music in a separate thread
+            music_thread = threading.Thread(target=self.play_music)
+            music_thread.daemon = True
+            music_thread.start()
+
             self.screen = pygame.display.set_mode((self.windowWidth, self.windowHeight))
             self.clock = pygame.time.Clock()
             
@@ -93,6 +118,7 @@ class Game:
 
     def addScore(self, blocksPlaced, linesCleared):
         if (linesCleared >= 1): # If the player cleared a line
+            self.blast_sound.play()
             self.comboCount += 1 # Add a count to the combo
             self.comboFailCount = 0 # Reset the fail counter of the combo
         else: # If the player fail to clear a line
