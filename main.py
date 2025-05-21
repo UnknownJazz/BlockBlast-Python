@@ -7,4 +7,3 @@ if __name__ == '__main__':
     gameInstance = game.Game(windowWidth, windowHeight)
 
     gameInstance.run()
-

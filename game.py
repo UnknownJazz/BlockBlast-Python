@@ -10,7 +10,7 @@ class Game:
     
     def play_music(self):
         pygame.mixer.init()
-        pygame.mixer.music.load("assets\Kirby_dream_land_theme_song.mp3")  # or "bg_music.wav"
+        pygame.mixer.music.load("assets\Candy Crush Saga OST - Saltnado Event (Candy Town Saved).mp3")  # or "bg_music.wav"
         pygame.mixer.music.play(-1)  # -1 means loop forever
         pygame.mixer.music.set_volume(0.5)
 
@@ -22,8 +22,8 @@ class Game:
         
         # Load blast sound effect once
         pygame.mixer.init()
-        self.blast_sound = pygame.mixer.Sound("assets\Get out sound effect!!.mp3")
-        self.blast_sound.set_volume(2)  # 50% volume
+        self.blast_sound = pygame.mixer.Sound("assets/blast_sfx.mp3")
+        self.blast_sound.set_volume(1) 
 
 
     def run(self):
